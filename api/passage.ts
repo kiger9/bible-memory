@@ -1,11 +1,9 @@
 // Vercel serverless function: fetches licensed translations server-side.
-//   GET /api/passage?ref=John%203:16&translation=esv|lsb
+//   GET /api/passage?ref=John%203:16-17&translation=esv|lsb&bn=43&ch=3&vs=16&ve=17
+//   (bn = 1-based book number Genesis..Revelation, ch/vs/ve = chapter and verse range; the browser parses the reference)
 // ESV: official api.esv.org when ESV_API_KEY is set; otherwise the public reader page at
 //      www.esv.org (interim, until the Crossway key arrives).
 // LSB: the Next.js data route behind read.lsbible.org (unofficial; personal use).
-import { parseReference } from '../src/lib/refs'
-import { BOOKS } from '../src/lib/books'
-
 type Req = { method?: string; query: Record<string, string | string[] | undefined> }
 type Res = { status: (n: number) => Res; json: (b: unknown) => void; send: (b: string) => void; setHeader: (k: string, v: string) => void }
 
@@ -13,12 +11,15 @@ const UA = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/6
 
 export interface Passage { text: string; reference: string; verseEnd: number; source: string }
 
+export interface RefParams { ref: string; bookName: string; bn: number; ch: number; vs: number; ve: number }
+
 export default async function handler(req: Req, res: Res) {
-  const ref = String(req.query.ref ?? '').trim()
-  const translation = String(req.query.translation ?? '')
+  const q = (k: string) => String(req.query[k] ?? '').trim()
+  const ref = q('ref'), translation = q('translation')
+  const params: RefParams = { ref, bookName: ref.replace(/\s+\d+(:\d+(-\d+)?)?$/, ''), bn: Number(q('bn')), ch: Number(q('ch')), vs: Number(q('vs')) || 1, ve: Number(q('ve')) || 999 }
   if (!ref) return res.status(400).send('Missing ref')
   try {
-    const out = await fetchProxied(ref, translation)
+    const out = await fetchProxied(params, translation)
     if (!out) return res.status(400).send(`Unknown proxied translation "${translation}"`)
     res.setHeader('Cache-Control', 's-maxage=86400, stale-while-revalidate')
     return res.status(200).json(out)
@@ -27,9 +28,9 @@ export default async function handler(req: Req, res: Res) {
   }
 }
 
-export async function fetchProxied(ref: string, translation: string): Promise<Passage | null> {
-  if (translation === 'esv') return process.env.ESV_API_KEY ? fetchEsvApi(ref, process.env.ESV_API_KEY) : fetchEsvSite(ref)
-  if (translation === 'lsb') return fetchLsb(ref)
+export async function fetchProxied(p: RefParams, translation: string): Promise<Passage | null> {
+  if (translation === 'esv') return process.env.ESV_API_KEY ? fetchEsvApi(p.ref, process.env.ESV_API_KEY) : fetchEsvSite(p)
+  if (translation === 'lsb') return fetchLsb(p.ref)
   return null
 }
 
@@ -54,18 +55,16 @@ async function fetchEsvApi(ref: string, key: string): Promise<Passage> {
    Markup: <span class="verse" data-ref="43003016" ...><b class="verse-num">16&nbsp;</b>
            <sup class="footnote">…</sup><sup class="crossref">…</sup><u data-offset="7">For</u><u> </u>…</span> */
 
-async function fetchEsvSite(ref: string): Promise<Passage> {
-  const parsed = parseReference(ref)
-  if ('error' in parsed) throw new Error(parsed.error)
-  const bookNum = BOOKS.findIndex(b => b.id === parsed.book.id) + 1
-  const slug = `${parsed.book.name} ${parsed.chapter}`.replace(/\s+/g, '+')
+async function fetchEsvSite(p: RefParams): Promise<Passage> {
+  if (!p.bn || !p.ch) throw new Error('Missing book/chapter for ESV lookup.')
+  const slug = `${p.bookName} ${p.ch}`.replace(/\s+/g, '+')
   const r = await fetch(`https://www.esv.org/${slug}/`, { headers: { 'User-Agent': UA, Accept: 'text/html' } })
   if (!r.ok) throw new Error(`esv.org returned ${r.status}`)
   const html = await r.text()
   const verses: { n: number; text: string }[] = []
   for (const m of html.matchAll(/<span class="verse" data-ref="(\d{2})(\d{3})(\d{3})"/g)) {
     const [bn, cn, vn] = [Number(m[1]), Number(m[2]), Number(m[3])]
-    if (bn !== bookNum || cn !== parsed.chapter || vn < parsed.verseStart || vn > parsed.verseEnd) continue
+    if (bn !== p.bn || cn !== p.ch || vn < p.vs || vn > p.ve) continue
     const inner = balanced(html, m.index!, 'span')
     const text = clean(decode(inner
       .replace(/<sup\b[^>]*>[\s\S]*?<\/sup>/gi, ' ')
@@ -76,7 +75,7 @@ async function fetchEsvSite(ref: string): Promise<Passage> {
   }
   if (!verses.length) throw new Error('That passage was not found on esv.org.')
   const verseEnd = verses[verses.length - 1].n
-  const reference = `${parsed.book.name} ${parsed.chapter}:${parsed.verseStart}${verseEnd !== parsed.verseStart ? `-${verseEnd}` : ''}`
+  const reference = `${p.bookName} ${p.ch}:${p.vs}${verseEnd !== p.vs ? `-${verseEnd}` : ''}`
   return { text: clean(verses.map(v => v.text).join(' ')), reference, verseEnd, source: 'www.esv.org' }
 }
 
