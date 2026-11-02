@@ -24,9 +24,10 @@ All three were checked against the App Store and the obvious search results (Nov
 ### Candidate 1 — Kept  (recommended)
 
 - **Why:** From Psalm 119 ("I have kept thy word", v. 67; "Thy word have I hid in mine heart", v. 11). One syllable. Past-tense and settled: the verse is already yours. Reads well as a home-screen label under an icon, where long names truncate.
-- **Wordmark:** Newsreader, weight 500, sentence case, letterspacing −0.012em. A small **ribbon mark** sits to the left: a bookmark ribbon drawn in CSS (a 10×16 rectangle with a notch cut from the bottom edge). The ribbon says "your place is held."
+- **Wordmark:** a decorative initial. The K is the Cinzel Decorative capital (Google Fonts, SIL Open Font License), a Renaissance-inscriptional letter with a long swash leg that tucks under the e, set in the accent color. "ept" follows in Newsreader 500, sentence case, letterspacing −0.012em. The K outline is embedded as SVG (`src/components/kGlyph.ts`) so the wordmark, favicon and app icons share one drawing and never depend on a font load. A small **ribbon mark** sits to the left: a bookmark ribbon drawn in CSS (a 10×16 rectangle with a notch cut from the bottom edge). The ribbon says "your place is held."
 - **Lockups:** mark + word (header), word alone (splash), mark alone (app icon badge, tab-bar brand).
-- **App icon:** vestry-green ground, a paper-colored Newsreader "K" with the ribbon tucked at the top edge. No gradient, no gloss.
+- **App icon:** vestry-green ground, the decorative K in paper with the ribbon tucked at the top edge. No gradient, no gloss. Shipped as `icon-512.png`, `icon-192.png`, `apple-touch-icon.png` (180) and `favicon.svg` (64, 12px radius).
+- **Launch splash:** ribbon, wordmark at 56px, then *I have kept thy word.* with the reference Psalm 119:67 beneath, and the line "A devotional app for personal use." at the foot. Shows for two seconds or until tapped, once per app session; shorter under reduced motion.
 
 ### Candidate 2 — Verbatim
 
