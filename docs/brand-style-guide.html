@@ -397,7 +397,7 @@ section.g > header p { max-width:60ch; color:var(--ink-2); }
     <div class="panel" style="display:grid;gap:16px">
       <p class="label">512 × 512 concept, shown at 37.5%. Vestry green ground, paper "K" in Newsreader 500, the ribbon tucked at the top edge. No gradient, no gloss, no inner shadow.</p>
       <div class="icon-scale"><div class="icon-512"><i class="ribbon"></i><span class="k">K</span></div></div>
-      <p class="meta">Export the mark with a flat #2E5A45 ground at 512, 192, 180 and 120. iOS applies its own corner mask; Android gets the same square with a 112px radius.</p>
+      <p class="meta">Shipped as <code>icon-512.png</code>, <code>icon-192.png</code> (PWA manifest, maskable) and <code>apple-touch-icon.png</code> at 180px, all on a flat #2E5A45 ground; iOS applies its own corner mask. The browser-tab favicon is <code>favicon.svg</code>: the same K and ribbon on a 64px rounded square (12px radius).</p>
     </div>
     <div class="panel" style="display:grid;gap:16px">
       <p class="label">On a home screen · 60px</p>
@@ -607,7 +607,7 @@ section.g > header p { max-width:60ch; color:var(--ink-2); }
 
     <div class="panel" style="display:grid;gap:16px;align-content:start">
       <p class="label">Translation picker · pills · one selected</p>
-      <div class="pills"><button class="pill on">ESV</button><button class="pill">NIV</button><button class="pill">KJV</button><button class="pill">NASB</button><button class="pill">NLT</button><button class="pill">CSB</button></div>
+      <div class="pills"><button class="pill on">ESV</button><button class="pill">LSB</button><button class="pill">KJV</button><button class="pill">WEB</button><button class="pill">ASV</button><button class="pill">Own text</button></div>
       <p class="label" style="margin-top:8px">Verse textarea · Newsreader 19px so you see it as you'll read it</p>
       <div class="field"><label for="f4">Verse text</label><textarea class="input textarea" id="f4" rows="3">God is our refuge and strength, a very present help in trouble.</textarea></div>
     </div>
@@ -645,12 +645,12 @@ section.g > header p { max-width:60ch; color:var(--ink-2); }
     <div class="panel" style="display:grid;gap:12px;align-content:start">
       <p class="label">Hint ladder · four rungs · 44px each · used, next, later</p>
       <div class="ladder">
-        <div class="rung used"><span class="n">1</span>Show the first letters<svg class="ic sm"><use href="#i-check"/></svg></div>
-        <div class="rung used"><span class="n">2</span>Show how each line begins<svg class="ic sm"><use href="#i-check"/></svg></div>
-        <div class="rung next"><span class="n">3</span>Show every other word<svg class="ic sm"><use href="#i-chev-r"/></svg></div>
-        <div class="rung"><span class="n">4</span>Show the whole verse, then try again</div>
+        <div class="rung used"><span class="n">1</span>The next thought, in a line<svg class="ic sm"><use href="#i-check"/></svg></div>
+        <div class="rung used"><span class="n">2</span>First letters of the phrase<svg class="ic sm"><use href="#i-check"/></svg></div>
+        <div class="rung next"><span class="n">3</span>The first word<svg class="ic sm"><use href="#i-chev-r"/></svg></div>
+        <div class="rung"><span class="n">4</span>Show the phrase, then try again</div>
       </div>
-      <p class="meta">A used rung costs nothing visible. The logbook records "needed hints" quietly.</p>
+      <p class="meta">Rung 1 is a one-line gist of the next phrase, generated once per verse. Rungs escalate per phrase and reset at the next one. The logbook records "needed hints" quietly.</p>
     </div>
 
     <div class="panel" style="display:grid;gap:4px;align-content:start">
@@ -732,7 +732,7 @@ section.g > header p { max-width:60ch; color:var(--ink-2); }
         <div class="field"><label for="m-ref">Reference</label><input class="input" id="m-ref" value="Philippians 4:6"></div>
         <div class="field">
           <label>Translation</label>
-          <div class="pills"><span class="pill on">ESV</span><span class="pill">NIV</span><span class="pill">KJV</span><span class="pill">NASB</span><span class="pill">NLT</span><span class="pill">CSB</span></div>
+          <div class="pills"><span class="pill on">ESV</span><span class="pill">LSB</span><span class="pill">KJV</span><span class="pill">WEB</span><span class="pill">ASV</span><span class="pill">Own text</span></div>
         </div>
         <div class="field"><label for="m-text">Verse text</label><textarea class="input textarea" id="m-text" rows="5">Do not be anxious about anything, but in everything by prayer and supplication with thanksgiving let your requests be made known to God.</textarea></div>
         <p class="meta">Paste the text as printed. Punctuation counts when you type it back.</p>
@@ -796,12 +796,12 @@ section.g > header p { max-width:60ch; color:var(--ink-2); }
       <div class="sheet">
         <div class="handle"></div>
         <div class="sh"><b>A hint</b><span>Romans 8:28</span></div>
-        <p class="hinted" style="letter-spacing:.08em"><b>A w k t a t w t f g t t t l G,</b> <b>t t w a t c a t h p.</b></p>
+        <p class="hinted"><span class="eyebrow" style="display:block;margin-bottom:4px">Next thought</span><b>Who this promise is for: those called to his purpose.</b></p>
         <div class="ladder">
-          <div class="rung used"><span class="n">1</span>Show the first letters<svg class="ic sm"><use href="#i-check"/></svg></div>
-          <div class="rung next"><span class="n">2</span>Show how each line begins<svg class="ic sm"><use href="#i-chev-r"/></svg></div>
-          <div class="rung"><span class="n">3</span>Show every other word</div>
-          <div class="rung"><span class="n">4</span>Show the whole verse, then try again</div>
+          <div class="rung used"><span class="n">1</span>The next thought, in a line<svg class="ic sm"><use href="#i-check"/></svg></div>
+          <div class="rung next"><span class="n">2</span>First letters of the phrase<svg class="ic sm"><use href="#i-chev-r"/></svg></div>
+          <div class="rung"><span class="n">3</span>The first word</div>
+          <div class="rung"><span class="n">4</span>Show the phrase, then try again</div>
         </div>
         <button class="btn btn-secondary block">Back to reciting</button>
       </div>
@@ -874,8 +874,8 @@ section.g > header p { max-width:60ch; color:var(--ink-2); }
     <div class="row"><span class="k">Empty · Verses</span><span class="v">Nothing here yet. Add a verse you want to keep.</span></div>
     <div class="row"><span class="k">Empty · Logbook</span><span class="v">Your practice will be recorded here, one session at a time.</span></div>
     <div class="row"><span class="k">Empty · Today</span><span class="v">Nothing is due today. Add a verse, or review one you already keep.</span></div>
-    <div class="row"><span class="k">Hint · rung 1</span><span class="v">Show the first letters.</span></div>
-    <div class="row"><span class="k">Hint · rung 4</span><span class="v">Show the whole verse. Then try again.</span></div>
+    <div class="row"><span class="k">Hint · rung 1</span><span class="v">Next thought: who this promise is for.</span></div>
+    <div class="row"><span class="k">Hint · rung 4</span><span class="v">Show the phrase. Then try again.</span></div>
     <div class="row"><span class="k">After a slip</span><span class="v">Close. The word is <em>strength</em>.</span></div>
     <div class="row"><span class="k">Word-perfect</span><span class="v">Kept. It will come round again on Thursday.</span></div>
     <div class="row"><span class="k">Needed hints</span><span class="v">You needed two hints. That's how it goes in. Again tomorrow.</span></div>
