@@ -1,4 +1,4 @@
-export type TranslationId = 'web' | 'kjv' | 'asv' | 'bbe' | 'darby' | 'ylt' | 'esv' | 'custom'
+export type TranslationId = 'web' | 'kjv' | 'asv' | 'bbe' | 'darby' | 'ylt' | 'esv' | 'lsb' | 'custom'
 
 export interface Translation {
   id: TranslationId

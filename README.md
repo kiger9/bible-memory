@@ -9,10 +9,10 @@ A personal scripture-memorization web app that runs as a PWA on your phone. Add 
 - `ts-fsrs` spaced repetition for review scheduling
 - Web Speech API for speak-aloud practice
 - Vercel serverless functions in `api/` for keyed services:
-  - `api/passage.ts` proxies licensed translations (ESV) with a server-side key
+  - `api/passage.ts` fetches licensed translations server-side. ESV uses the official api.esv.org when `ESV_API_KEY` is set and otherwise reads the public passage page at esv.org as an interim measure. LSB reads the data route behind read.lsbible.org (unofficial, personal use, within Lockman's 1,000-verse quotation permission)
   - `api/hints.ts` calls Claude once per verse to generate thought-chunk hints
 
-Public-domain translations (WEB, KJV, ASV, BBE, Darby, YLT) are fetched from bible-api.com directly from the browser, no key needed. Licensed translations without a hobby-friendly API (NIV, NLT, NASB, CSB) can be pasted in by hand with the "Paste my own text" option; that text stays on the device.
+Public-domain translations (WEB, KJV, ASV, BBE, Darby, YLT) are fetched from bible-api.com directly from the browser, no key needed. ESV and LSB go through the proxy. Licensed translations without a hobby-friendly API (NIV, NLT, NASB, CSB) can be pasted in by hand with the "Paste my own text" option; that text stays on the device.
 
 ## Local development
 

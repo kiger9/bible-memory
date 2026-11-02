@@ -9,6 +9,7 @@ export const TRANSLATIONS: Translation[] = [
   { id: 'darby', name: 'Darby Translation', abbr: 'DARBY', source: 'direct', attribution: 'Darby Translation, public domain.' },
   { id: 'ylt',  name: "Young's Literal Translation", abbr: 'YLT', source: 'direct', attribution: "Young's Literal Translation, public domain." },
   { id: 'esv',  name: 'English Standard Version', abbr: 'ESV', source: 'proxy', attribution: 'Scripture quotations are from the ESV® Bible (The Holy Bible, English Standard Version®), © 2001 by Crossway. Used by permission. All rights reserved.' },
+  { id: 'lsb',  name: 'Legacy Standard Bible', abbr: 'LSB', source: 'proxy', attribution: 'Scripture quotations taken from the (LSB®) Legacy Standard Bible®, Copyright © 2021 by The Lockman Foundation. Used by permission. All rights reserved. Managed in partnership with Three Sixteen Publishing Inc. LSBible.org' },
   { id: 'custom', name: 'Paste my own text (NIV, NLT, NASB, CSB…)', abbr: 'Own text', source: 'manual', attribution: 'Text entered by you from your own Bible. Stored only on this device.' },
 ]
 
@@ -34,7 +35,7 @@ export async function fetchPassage(ref: ParsedRef, translation: TranslationId): 
   const res = await fetch(`/api/passage?ref=${encodeURIComponent(q)}&translation=${t.id}`)
   if (!res.ok) {
     const msg = await res.text().catch(() => '')
-    throw new Error(msg || `Could not fetch ${t.abbr} (${res.status}). Is the API key configured?`)
+    throw new Error(msg || `Could not fetch ${t.abbr} (${res.status}).`)
   }
   return await res.json() as FetchedPassage
 }
