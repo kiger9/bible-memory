@@ -6,6 +6,7 @@ import { tokenize, wordDiff, normalizeWord, type DiffOp } from '../lib/text'
 import { hintText } from '../lib/hints'
 import { gradeFromAccuracy, newReviewState, review } from '../lib/srs'
 import { speechMethod, startListening, startRecording } from '../lib/speech'
+import { scheduleSync } from '../lib/sync'
 import type { Mode, Verse } from '../lib/types'
 import Header from '../components/Header'
 import VerseText from '../components/VerseText'
@@ -40,6 +41,7 @@ export default function Practice() {
 
 async function recordAttempt(verse: Verse, mode: Mode, accuracy: number, hintsUsed: number, startedAt: number) {
   await db.attempts.add({ verseId: verse.id!, mode, accuracy, hintsUsed, durationMs: Date.now() - startedAt, at: Date.now() })
+  scheduleSync()
   if (mode === 'read') return
   const state = (await db.reviews.get(verse.id!)) ?? newReviewState(verse.id!)
   await db.reviews.put(review(state, gradeFromAccuracy(accuracy, hintsUsed)))
@@ -183,15 +185,27 @@ function SpeakMode({ verse }: { verse: Verse }) {
   }
   if (method === 'none') return <p className="lede">Speaking practice needs a microphone and a modern browser. Try Safari on iPhone or Chrome on Android.</p>
   if (result) return <Result accuracy={result.accuracy} ops={result.ops} onAgain={() => { setResult(null); setTranscript(''); setHints(0); started.current = Date.now() }} />
+  const hasText = !!transcript.trim()
   return (
     <section>
-      <button className={'button mic' + (listening ? ' live' : '')} onClick={toggle} disabled={transcribing}>
-        {listening ? 'Stop' : transcribing ? 'Transcribing…' : 'Start speaking'}
-      </button>
-      <p className="transcript">{transcript || <span className="muted">{listening ? 'Listening…' : 'Say the verse aloud, then tap Stop.'}</span>}</p>
+      <p className="muted">{verse.reference} · {verse.words.length} words · say it aloud, then tap Stop.</p>
+      <p className={'transcript' + (listening ? ' live' : '')}>
+        {transcript || <span className="muted">{listening ? 'Listening…' : transcribing ? 'Transcribing…' : 'Your words will appear here.'}</span>}
+      </p>
       {error && <p className="error">{error}</p>}
       <HintPanel verse={verse} at={at} onUse={() => setHints(h => h + 1)} />
-      <button className="button primary" onClick={check} disabled={!transcript.trim() || listening || transcribing}>Check</button>
+      <div className="speak-controls">
+        {listening ? (
+          <button className="button mic live" onClick={toggle}>Stop</button>
+        ) : hasText ? (
+          <>
+            <button className="button primary" onClick={check} disabled={transcribing}>Check</button>
+            <button className="button ghost" onClick={toggle} disabled={transcribing}>Record again</button>
+          </>
+        ) : (
+          <button className="button primary mic" onClick={toggle} disabled={transcribing}>{transcribing ? 'Transcribing…' : 'Start speaking'}</button>
+        )}
+      </div>
     </section>
   )
 }

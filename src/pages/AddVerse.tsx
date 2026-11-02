@@ -7,6 +7,7 @@ import { tokenize } from '../lib/text'
 import { newReviewState } from '../lib/srs'
 import type { TranslationId, ThoughtChunk } from '../lib/types'
 import Header from '../components/Header'
+import { scheduleSync } from '../lib/sync'
 import VerseText from '../components/VerseText'
 
 export default function AddVerse() {
@@ -58,6 +59,7 @@ export default function AddVerse() {
     })
     await db.reviews.put(newReviewState(id as number))
     await db.settings.put({ ...(await getSettings()), defaultTranslation: translation })
+    scheduleSync(1000)
     nav(`/practice/${id}`, { replace: true })
   }
 

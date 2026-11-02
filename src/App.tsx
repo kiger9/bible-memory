@@ -9,9 +9,10 @@ import Practice from './pages/Practice'
 import Quiz from './pages/Quiz'
 import Logbook from './pages/Logbook'
 import { requestPersistence } from './lib/db'
+import { syncOnLaunch } from './lib/sync'
 
 export default function App() {
-  useEffect(() => { requestPersistence() }, [])
+  useEffect(() => { requestPersistence(); syncOnLaunch() }, [])
   return (
     <div className="app">
       <Splash />

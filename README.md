@@ -31,7 +31,12 @@ Open the printed URL on your phone (same Wi-Fi) to try it. The `/api` functions 
    - `ANTHROPIC_API_KEY` (console.anthropic.com) for hints
    - `ESV_API_KEY` (api.esv.org, free for non-commercial use) for the ESV
    - `GROQ_API_KEY` (console.groq.com) for speak-aloud practice in the installed iOS app, where the Web Speech API is unavailable and the app records audio and transcribes it via `api/transcribe.ts`
-4. Deploy. Open the URL on your phone, then Share, "Add to Home Screen".
+   - `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` for cloud backup. Easiest: in the Vercel project, Storage tab, "Create Database", pick Upstash Redis (free tier). Vercel injects both variables automatically.
+4. Deploy.
+
+## Backup and restore
+
+Data lives on the phone in IndexedDB. To survive deleting or reinstalling the app, open Logbook, choose a sync phrase (8+ characters) and turn on sync. The app derives an encryption key and a storage id from the phrase with PBKDF2, encrypts the whole database with AES-GCM, and uploads it through `api/sync.ts` to Upstash Redis after every practice and whenever the app goes to the background. The server only ever sees ciphertext. On a fresh install, enter the same phrase in Logbook and everything is restored. Export and import of a plain JSON file remain available as a manual fallback. Open the URL on your phone, then Share, "Add to Home Screen".
 
 ## Project layout
 
