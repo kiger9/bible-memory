@@ -11,7 +11,7 @@ export const BOOKS: Book[] = [
   b('1KI','1 Kings',22,'1kgs','1ki','1k','1kings','iki'), b('2KI','2 Kings',25,'2kgs','2ki','2k','2kings','iiki'),
   b('1CH','1 Chronicles',29,'1chr','1ch','1chron','1chronicles'), b('2CH','2 Chronicles',36,'2chr','2ch','2chron','2chronicles'),
   b('EZR','Ezra',10,'ezra','ezr'), b('NEH','Nehemiah',13,'neh','ne'), b('EST','Esther',10,'esth','est','es'),
-  b('JOB','Job',42,'job','jb'), b('PSA','Psalms',150,'ps','psa','psalm','psalms','pss','psm'), b('PRO','Proverbs',31,'prov','pro','pr','prv'),
+  b('JOB','Job',42,'job','jb'), b('PSA','Psalm',150,'ps','psa','psalm','psalms','pss','psm'), b('PRO','Proverbs',31,'prov','pro','pr','prv'),
   b('ECC','Ecclesiastes',12,'eccl','ecc','ec','qoh'), b('SNG','Song of Solomon',8,'song','sos','songofsolomon','songofsongs','canticles','ss'),
   b('ISA','Isaiah',66,'isa','is'), b('JER','Jeremiah',52,'jer','je','jr'), b('LAM','Lamentations',5,'lam','la'),
   b('EZK','Ezekiel',48,'ezek','eze','ezk'), b('DAN','Daniel',12,'dan','da','dn'), b('HOS','Hosea',14,'hos','ho'),

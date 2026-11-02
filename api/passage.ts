@@ -1,19 +1,24 @@
 // Vercel serverless function: fetches licensed translations server-side.
 //   GET /api/passage?ref=John%203:16&translation=esv|lsb
-// ESV: uses the official api.esv.org when ESV_API_KEY is set; otherwise reads the public
-//      passage page at www.esv.org (interim, until the Crossway key arrives).
-// LSB: reads the Next.js data route behind read.lsbible.org (unofficial; personal use).
+// ESV: official api.esv.org when ESV_API_KEY is set; otherwise the public reader page at
+//      www.esv.org (interim, until the Crossway key arrives).
+// LSB: the Next.js data route behind read.lsbible.org (unofficial; personal use).
+import { parseReference } from '../src/lib/refs'
+import { BOOKS } from '../src/lib/books'
+
 type Req = { method?: string; query: Record<string, string | string[] | undefined> }
 type Res = { status: (n: number) => Res; json: (b: unknown) => void; send: (b: string) => void; setHeader: (k: string, v: string) => void }
 
 const UA = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1'
+
+export interface Passage { text: string; reference: string; verseEnd: number; source: string }
 
 export default async function handler(req: Req, res: Res) {
   const ref = String(req.query.ref ?? '').trim()
   const translation = String(req.query.translation ?? '')
   if (!ref) return res.status(400).send('Missing ref')
   try {
-    const out = translation === 'esv' ? await fetchEsv(ref) : translation === 'lsb' ? await fetchLsb(ref) : null
+    const out = await fetchProxied(ref, translation)
     if (!out) return res.status(400).send(`Unknown proxied translation "${translation}"`)
     res.setHeader('Cache-Control', 's-maxage=86400, stale-while-revalidate')
     return res.status(200).json(out)
@@ -22,15 +27,13 @@ export default async function handler(req: Req, res: Res) {
   }
 }
 
-interface Passage { text: string; reference: string; verseEnd: number; source: string }
-
-/* ---------------- ESV ---------------- */
-
-async function fetchEsv(ref: string): Promise<Passage> {
-  const key = process.env.ESV_API_KEY
-  if (key) return fetchEsvApi(ref, key)
-  return fetchEsvSite(ref)
+export async function fetchProxied(ref: string, translation: string): Promise<Passage | null> {
+  if (translation === 'esv') return process.env.ESV_API_KEY ? fetchEsvApi(ref, process.env.ESV_API_KEY) : fetchEsvSite(ref)
+  if (translation === 'lsb') return fetchLsb(ref)
+  return null
 }
+
+/* ---------------- ESV (official API) ---------------- */
 
 async function fetchEsvApi(ref: string, key: string): Promise<Passage> {
   const params = new URLSearchParams({
@@ -47,35 +50,39 @@ async function fetchEsvApi(ref: string, key: string): Promise<Passage> {
   return { text, reference: data.canonical, verseEnd: endPacked % 1000, source: 'api.esv.org' }
 }
 
-/** Interim: parse the public reader page. Crossway's renderer marks verse numbers as
- *  <b class="verse-num" id="v43003016-1">16&nbsp;</b> (id = v + BB CCC VVV - n). */
+/* ---------------- ESV (reader page, interim) ----------------
+   Markup: <span class="verse" data-ref="43003016" ...><b class="verse-num">16&nbsp;</b>
+           <sup class="footnote">…</sup><sup class="crossref">…</sup><u data-offset="7">For</u><u> </u>…</span> */
+
 async function fetchEsvSite(ref: string): Promise<Passage> {
-  const slug = ref.replace(/\s+/g, '+')
-  const r = await fetch(`https://www.esv.org/${encodeURIComponent(slug).replace(/%2B/g, '+')}/`, { headers: { 'User-Agent': UA, Accept: 'text/html' } })
+  const parsed = parseReference(ref)
+  if ('error' in parsed) throw new Error(parsed.error)
+  const bookNum = BOOKS.findIndex(b => b.id === parsed.book.id) + 1
+  const slug = `${parsed.book.name} ${parsed.chapter}`.replace(/\s+/g, '+')
+  const r = await fetch(`https://www.esv.org/${slug}/`, { headers: { 'User-Agent': UA, Accept: 'text/html' } })
   if (!r.ok) throw new Error(`esv.org returned ${r.status}`)
   const html = await r.text()
-  // Narrow to the passage block if we can find it; otherwise work on the whole page.
-  const start = html.search(/<div[^>]+(class="[^"]*passage[^"]*"|id="passage[^"]*")[^>]*>/i)
-  let block = start >= 0 ? html.slice(start) : html
-  const copyIdx = block.search(/class="[^"]*(copyright|footnotes|crossrefs)[^"]*"/i)
-  if (copyIdx > 0) block = block.slice(0, copyIdx)
-  const verseIds = [...block.matchAll(/id="v(\d{2})(\d{3})(\d{3})-\d+"/g)]
-  if (!verseIds.length) throw new Error('Could not read the ESV passage page. Try another reference, or set ESV_API_KEY.')
-  const last = verseIds[verseIds.length - 1]
-  const verseEnd = Number(last[3])
-  let text = block
-    .replace(/<h[1-6][^>]*>[\s\S]*?<\/h[1-6]>/gi, ' ')                       // headings
-    .replace(/<span[^>]*class="[^"]*(footnote|crossref|chapter-num)[^"]*"[^>]*>[\s\S]*?<\/span>/gi, ' ')
-    .replace(/<sup[^>]*>[\s\S]*?<\/sup>/gi, ' ')                            // footnote markers
-    .replace(/<b[^>]*class="[^"]*verse-num[^"]*"[^>]*>[\s\S]*?<\/b>/gi, ' ') // verse numbers
-    .replace(/<[^>]+>/g, ' ')
-  text = clean(decode(text))
-  const canonical = decode((html.match(/<title>([^<|]+)/i)?.[1] ?? ref).replace(/\s*[-–|].*$/, '').trim()) || ref
-  if (!text) throw new Error('Could not read the ESV passage text.')
-  return { text, reference: canonical, verseEnd, source: 'www.esv.org' }
+  const verses: { n: number; text: string }[] = []
+  for (const m of html.matchAll(/<span class="verse" data-ref="(\d{2})(\d{3})(\d{3})"/g)) {
+    const [bn, cn, vn] = [Number(m[1]), Number(m[2]), Number(m[3])]
+    if (bn !== bookNum || cn !== parsed.chapter || vn < parsed.verseStart || vn > parsed.verseEnd) continue
+    const inner = balanced(html, m.index!, 'span')
+    const text = clean(decode(inner
+      .replace(/<sup\b[^>]*>[\s\S]*?<\/sup>/gi, ' ')
+      .replace(/<b\b[^>]*class="[^"]*verse-num[^"]*"[^>]*>[\s\S]*?<\/b>/gi, ' ')
+      .replace(/<[^>]*class="[^"]*(psalm-title|chapter-num)[^"]*"[^>]*>[\s\S]*?<\/[^>]+>/gi, ' ')
+      .replace(/<[^>]+>/g, '')))
+    if (text) verses.push({ n: vn, text })
+  }
+  if (!verses.length) throw new Error('That passage was not found on esv.org.')
+  const verseEnd = verses[verses.length - 1].n
+  const reference = `${parsed.book.name} ${parsed.chapter}:${parsed.verseStart}${verseEnd !== parsed.verseStart ? `-${verseEnd}` : ''}`
+  return { text: clean(verses.map(v => v.text).join(' ')), reference, verseEnd, source: 'www.esv.org' }
 }
 
-/* ---------------- LSB ---------------- */
+/* ---------------- LSB ----------------
+   index.json?q=REF answers with a redirect to /book/chapter/verses; that path's .json carries
+   pageProps.passages[].passageHtml with <span class="v" data-ref="43.3.16"><sup class="vn">16</sup>…</span>. */
 
 let lsbBuildId: string | null = null
 
@@ -90,26 +97,38 @@ async function getLsbBuildId(force = false): Promise<string> {
   return id
 }
 
+async function lsbData(path: string, buildId: string) {
+  return fetch(`https://read.lsbible.org/_next/data/${buildId}${path}`, {
+    headers: { 'User-Agent': UA, Accept: 'application/json', referer: 'https://read.lsbible.org/', 'x-nextjs-data': '1' },
+  })
+}
+
 async function fetchLsb(ref: string, retry = true): Promise<Passage> {
   const buildId = await getLsbBuildId()
-  const url = `https://read.lsbible.org/_next/data/${buildId}/index.json?q=${encodeURIComponent(ref)}`
-  const r = await fetch(url, { headers: { 'User-Agent': UA, Accept: 'application/json', referer: 'https://read.lsbible.org/', 'x-nextjs-data': '1' } })
+  let r = await lsbData(`/index.json?q=${encodeURIComponent(ref)}`, buildId)
   if (r.status === 404 && retry) { await getLsbBuildId(true); return fetchLsb(ref, false) } // build id rotated
   if (!r.ok) throw new Error(`read.lsbible.org returned ${r.status}`)
-  const data = await r.json() as { pageProps?: { passages?: { title?: string; passageHtml?: string; to?: { vn: number } }[] } }
+  let data = await r.json() as { pageProps?: { __N_REDIRECT?: string; passages?: LsbPassage[] } }
+  if (data.pageProps?.__N_REDIRECT) {
+    r = await lsbData(`${data.pageProps.__N_REDIRECT}.json`, buildId)
+    if (!r.ok) throw new Error(`read.lsbible.org returned ${r.status}`)
+    data = await r.json()
+  }
   const passages = data.pageProps?.passages ?? []
   if (!passages.length) throw new Error('That passage was not found in the LSB.')
   const verses: string[] = []
   let verseEnd = 0
   for (const p of passages) {
     const html = p.passageHtml ?? ''
-    for (const m of html.matchAll(/<span[^>]*class="[^"]*\bverse\b[^"]*"[^>]*data-key="(\d+)-(\d+)-(\d+)"[^>]*>([\s\S]*?)<\/span>(?=\s*(?:<span[^>]*class="[^"]*\bverse\b|<\/p>|<p|$))/g)) {
+    for (const m of html.matchAll(/<span class="v[ "][^>]*data-ref="(\d+)\.(\d+)\.(\d+)"/g)) {
       verseEnd = Number(m[3])
-      const inner = m[4]
-        .replace(/<small[^>]*data-verse[^>]*>[\s\S]*?<\/small>/gi, ' ')
-        .replace(/<[^>]*class="[^"]*(chapter-number|subhead)[^"]*"[^>]*>[\s\S]*?<\/[^>]+>/gi, ' ')
-        .replace(/<[^>]+>/g, ' ')
-      verses.push(clean(decode(inner)))
+      const inner = balanced(html, m.index!, 'span')
+      const text = clean(decode(inner
+        .replace(/<sup\b[^>]*>[\s\S]*?<\/sup>/gi, ' ')
+        .replace(/<b\b[^>]*class="[^"]*chapnum[^"]*"[^>]*>[\s\S]*?<\/b>/gi, ' ')
+        .replace(/<div\b[^>]*class="[^"]*psalm-title[^"]*"[^>]*>[\s\S]*?<\/div>/gi, ' ')
+        .replace(/<\/span>/g, ' ').replace(/<[^>]+>/g, '')))
+      if (text) verses.push(text)
     }
     if (!verseEnd && p.to?.vn) verseEnd = p.to.vn
   }
@@ -118,7 +137,25 @@ async function fetchLsb(ref: string, retry = true): Promise<Passage> {
   return { text, reference: passages[0]?.title?.trim() || ref, verseEnd, source: 'read.lsbible.org' }
 }
 
+interface LsbPassage { title?: string; passageHtml?: string; from?: { bn: number; cn: number; vn: number }; to?: { bn: number; cn: number; vn: number } }
+
 /* ---------------- helpers ---------------- */
+
+/** Returns the inner HTML of the element whose opening tag starts at `start`, honoring nesting of `tag`. */
+function balanced(html: string, start: number, tag: string): string {
+  const open = new RegExp(`<${tag}\\b`, 'gi'), close = new RegExp(`</${tag}>`, 'gi')
+  let depth = 0, i = html.indexOf('>', start) + 1
+  const innerStart = i
+  while (i < html.length) {
+    open.lastIndex = i; close.lastIndex = i
+    const o = open.exec(html), c = close.exec(html)
+    if (!c) break
+    if (o && o.index < c.index) { depth++; i = o.index + 1; continue }
+    if (depth === 0) return html.slice(innerStart, c.index)
+    depth--; i = c.index + 1
+  }
+  return html.slice(innerStart)
+}
 
 function clean(s: string): string {
   return s.replace(/ /g, ' ').replace(/\s+/g, ' ').replace(/\s+([,.;:!?”’)])/g, '$1').replace(/([“‘(])\s+/g, '$1').trim()
