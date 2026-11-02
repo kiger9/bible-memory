@@ -5,6 +5,9 @@
  */
 import { db, exportAll, importAll } from './db'
 
+/** Where backups live: a Cloudflare Worker (VITE_SYNC_URL, set at build time) or the Vercel function + Upstash fallback. */
+const SYNC_URL = (import.meta.env.VITE_SYNC_URL as string | undefined)?.replace(/\/$/, '') || '/api/sync'
+
 const PHRASE_KEY = 'kept-sync-phrase'
 const LAST_KEY = 'kept-sync-last'
 const enc = new TextEncoder(), dec = new TextDecoder()
@@ -41,7 +44,7 @@ export async function push(phrase = getPhrase()): Promise<void> {
   const snapshot = await exportAll()
   const updatedAt = Date.now()
   const payload = { ...(await encrypt(key, JSON.stringify(snapshot))), updatedAt }
-  const r = await fetch(`/api/sync?id=${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+  const r = await fetch(`${SYNC_URL}?id=${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
   if (!r.ok) throw new Error(await r.text().catch(() => 'Backup failed.'))
   setLast(updatedAt)
 }
@@ -50,7 +53,7 @@ export async function push(phrase = getPhrase()): Promise<void> {
 export async function pull(phrase = getPhrase()): Promise<boolean> {
   if (!phrase) return false
   const { key, id } = await derive(phrase)
-  const r = await fetch(`/api/sync?id=${id}`)
+  const r = await fetch(`${SYNC_URL}?id=${id}`)
   if (r.status === 404) return false
   if (!r.ok) throw new Error(await r.text().catch(() => 'Restore failed.'))
   const remote = await r.json() as { iv: string; data: string; updatedAt: number }
@@ -86,7 +89,7 @@ export async function syncOnLaunch() {
   if (!getPhrase()) return
   try {
     // Pull first in case another device (or a fresh reinstall) has newer data, then push the merged state.
-    const r = await fetch(`/api/sync?id=${(await derive(getPhrase()!)).id}`, { method: 'GET' })
+    const r = await fetch(`${SYNC_URL}?id=${(await derive(getPhrase()!)).id}`, { method: 'GET' })
     if (r.ok) {
       const remote = await r.json() as { updatedAt: number }
       if (remote.updatedAt > lastSynced()) await pull()

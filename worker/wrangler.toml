@@ -1,0 +1,14 @@
+# Cloudflare Worker that stores Kept's encrypted backups in Workers KV.
+# Deploy:  cd worker && npx wrangler login && npx wrangler kv namespace create KEPT_SYNC
+#          (paste the printed id below)  then  npx wrangler deploy
+name = "kept-sync"
+main = "src/index.ts"
+compatibility_date = "2026-10-01"
+
+[[kv_namespaces]]
+binding = "KEPT_SYNC"
+id = "REPLACE_WITH_NAMESPACE_ID"
+
+[vars]
+# Origins allowed to call this worker. Add your custom domain here if you set one up.
+ALLOWED_ORIGINS = "https://bible-memory-six.vercel.app,http://localhost:5173,http://localhost:4173"
