@@ -2,6 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { Link } from 'react-router-dom'
 import { db } from '../lib/db'
 import Header from '../components/Header'
+import Wordmark from '../components/Wordmark'
 
 export default function Today() {
   const now = Date.now()
@@ -16,7 +17,7 @@ export default function Today() {
 
   return (
     <>
-      <Header title="Today" action={<span className="wordmark">Kept</span>} />
+      <Header title="Today" action={<Wordmark size={20} />} />
       {verses.length === 0 && (
         <section className="empty">
           <p className="lede">Nothing here yet. Add a verse you want to carry with you.</p>

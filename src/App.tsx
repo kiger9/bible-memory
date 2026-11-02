@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useEffect } from 'react'
 import TabBar from './components/TabBar'
+import Splash from './components/Splash'
 import Today from './pages/Today'
 import Verses from './pages/Verses'
 import AddVerse from './pages/AddVerse'
@@ -13,6 +14,7 @@ export default function App() {
   useEffect(() => { requestPersistence() }, [])
   return (
     <div className="app">
+      <Splash />
       <main className="screen">
         <Routes>
           <Route path="/" element={<Today />} />

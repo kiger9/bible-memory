@@ -1,1 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="12" fill="#2E5A45"/><text x="32" y="47" font-family="Newsreader,Georgia,serif" font-weight="500" font-size="42" text-anchor="middle" fill="#F5F3EE">K</text><path d="M44 0h7v14l-3.5-3.5L44 14z" fill="#F5F3EE" opacity=".9"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+<rect width="64" height="64" rx="12" fill="#2E5A45"/>
+<path d="M44.8 0h7.04v12.16l-3.52 -3.52l-3.52 3.52z" fill="#F5F3EE" opacity=".92"/>
+<path transform="translate(9.12 43.61) scale(0.04199)" d="M42-10L55-10Q81-10 99.50-28.50Q118-47 119-73L119-73L119-628Q118-664 86-682L86-682Q72-690 55-690L55-690L42-690L42-700L346-700L345-690L333-690Q307-690 288-672Q269-654 269-628L269-628L269-73Q269-47 288-28.50Q307-10 333-10L333-10L345-10L346 0L42 0L42-10ZM1047 160L1048 170Q975 208 915 208Q855 208 807 191L807 191Q688 148 564-6L564-6L301-330L538-644Q546-654 546-662Q546-670 543-676L543-676Q535-691 515-691L515-691L505-691L505-700L734-700L734-691L730-691Q663-691 621-643L621-643L426-411L698-73Q789 47 869 101Q949 155 1047 160L1047 160Z" fill="#F5F3EE"/>
+</svg>

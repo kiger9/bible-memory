@@ -11,8 +11,21 @@ a { color: var(--accent); }
 .title { font-family: var(--font-serif); font-weight: 500; font-size: var(--fs-h3); letter-spacing: var(--ls-tight); margin: 0; text-align: center; }
 .back { font-size: 28px; line-height: var(--tap); text-decoration: none; color: var(--ink); width: var(--tap); }
 .header-action { min-width: var(--tap); display: flex; justify-content: flex-end; }
-.wordmark { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-serif); font-weight: 500; letter-spacing: var(--ls-tight); color: var(--ink); }
-.wordmark::before { content: ''; width: 10px; height: 16px; background: var(--accent); clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 72%, 0 100%); }
+.wordmark { display: inline-flex; align-items: center; gap: .4em; font-family: var(--font-serif); font-weight: 500; letter-spacing: var(--ls-tight); color: var(--ink); line-height: 1; }
+.wordmark .mark { display: inline-block; width: .45em; height: .72em; background: var(--accent); clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 72%, 0 100%); flex: none; }
+.wordmark-text { display: inline-block; white-space: nowrap; }
+.wordmark-k { display: inline-block; color: var(--accent); margin-right: -.06em; }
+
+/* Launch splash */
+.splash { position: fixed; inset: 0; z-index: 50; background: var(--paper); color: var(--ink); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: calc(env(safe-area-inset-top) + var(--sp-7)) var(--gutter-r) calc(env(safe-area-inset-bottom) + var(--sp-5)) var(--gutter); opacity: 1; transition: opacity var(--dur-slow) var(--ease-in-out); }
+.splash.out { opacity: 0; pointer-events: none; }
+.splash-center { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--sp-5); text-align: center; }
+.splash-mark { display: block; width: 22px; height: 36px; background: var(--accent); clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 72%, 0 100%); }
+.splash-verse { margin: var(--sp-3) 0 0; font-family: var(--font-serif); }
+.splash-verse p { margin: 0; font-size: var(--fs-h3); font-style: italic; line-height: var(--lh-body); }
+.splash-verse cite { display: block; margin-top: var(--sp-2); font-style: normal; font-family: var(--font-sans); font-size: var(--fs-caption); color: var(--ink-3); letter-spacing: .04em; }
+.splash-legal { margin: 0; font-size: var(--fs-micro); color: var(--ink-3); letter-spacing: .02em; text-align: center; }
+@media (prefers-reduced-motion: reduce) { .splash { transition: none; } }
 
 /* Tab bar */
 .tabbar { position: fixed; left: 0; right: 0; bottom: 0; display: flex; background: var(--surface); border-top: 1px solid var(--rule); padding-bottom: env(safe-area-inset-bottom); }
