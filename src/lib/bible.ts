@@ -9,6 +9,7 @@ export const TRANSLATIONS: Translation[] = [
   { id: 'darby', name: 'Darby Translation', abbr: 'DARBY', source: 'direct', attribution: 'Darby Translation, public domain.' },
   { id: 'ylt',  name: "Young's Literal Translation", abbr: 'YLT', source: 'direct', attribution: "Young's Literal Translation, public domain." },
   { id: 'esv',  name: 'English Standard Version', abbr: 'ESV', source: 'proxy', attribution: 'Scripture quotations are from the ESV® Bible (The Holy Bible, English Standard Version®), © 2001 by Crossway. Used by permission. All rights reserved.' },
+  { id: 'custom', name: 'Paste my own text (NIV, NLT, NASB, CSB…)', abbr: 'Own text', source: 'manual', attribution: 'Text entered by you from your own Bible. Stored only on this device.' },
 ]
 
 export function getTranslation(id: TranslationId): Translation {

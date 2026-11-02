@@ -16,7 +16,7 @@ export default function Today() {
 
   return (
     <>
-      <Header title="Today" />
+      <Header title="Today" action={<span className="wordmark">Kept</span>} />
       {verses.length === 0 && (
         <section className="empty">
           <p className="lede">Nothing here yet. Add a verse you want to carry with you.</p>
@@ -30,7 +30,7 @@ export default function Today() {
             <Link key={v.id} to={`/practice/${v.id}`} className="row">
               <div>
                 <div className="row-title">{v.reference}</div>
-                <div className="row-sub">{v.translation.toUpperCase()} · {dueIds.has(v.id!) ? 'Due for review' : 'New'}</div>
+                <div className="row-sub">{(v.translationLabel ?? v.translation.toUpperCase())} · {dueIds.has(v.id!) ? 'Due for review' : 'New'}</div>
               </div>
               <span className="chev">›</span>
             </Link>

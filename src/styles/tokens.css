@@ -1,10 +1,165 @@
+/* ==========================================================================
+   Kept — design tokens
+   Import this file before any component CSS. Every color is a token; no
+   component should use a literal hex value. Light values live on :root,
+   dark values are redefined twice (system preference + explicit toggle)
+   so an in-app theme switch wins in both directions.
+
+   Fonts (Google Fonts, load with display=swap):
+   https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap
+   ========================================================================== */
+
 :root {
-  --bg: #f6f1e7; --surface: #fffdf8; --ink: #1f1b17; --ink-2: #5d564d; --line: #e3dccd;
-  --accent: #2f5d50; --accent-ink: #ffffff; --danger: #9a3b2e; --ok: #2f5d50;
-  --serif: 'Newsreader', Georgia, serif; --sans: 'Instrument Sans', 'Helvetica Neue', Arial, sans-serif;
-  --radius: 8px; --space: 16px;
+  color-scheme: light;
+
+  /* --- Color: surfaces -------------------------------------------------- */
+  --paper:        #F5F3EE;   /* page ground                                 */
+  --surface:      #FBFAF7;   /* cards, sheets, inputs (raised a half-step)  */
+  --sunk:         #ECE8DF;   /* wells, track backgrounds, disabled fills    */
+  --rule:         #D9D3C7;   /* hairlines. Decorative only; never text      */
+
+  /* --- Color: ink ------------------------------------------------------- */
+  --ink:          #1C1A17;   /* verse text, headings      15.66:1 on paper  */
+  --ink-2:        #5A554D;   /* body / secondary           6.67:1 on paper  */
+  --ink-3:        #6B655C;   /* meta, timestamps, labels   5.20:1 on paper  */
+
+  /* --- Color: accent (one hue only) ------------------------------------- */
+  --accent:       #2E5A45;   /* vestry green               7.11:1 on paper  */
+  --accent-soft:  #DCE7DF;   /* tinted fill behind accent text/icons        */
+  --on-accent:    #F5F3EE;   /* text on solid accent       7.11:1           */
+
+  /* --- Color: semantic (used sparingly, never as decoration) ------------ */
+  --miss:         #8A2E2B;   /* oxblood: a wrong word, a destructive action */
+  --note:         #8A5A12;   /* amber: a gentle warning, a due-today marker */
+
+  /* --- Color: focus ----------------------------------------------------- */
+  --focus-ring:   var(--accent);
+
+  /* --- Type: families --------------------------------------------------- */
+  --font-serif: "Newsreader", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --font-sans:  "Instrument Sans", "Avenir Next", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+
+  /* --- Type: scale (px). Verse body is the anchor. ---------------------- */
+  --fs-micro:    12px;   /* tab labels, tiny meta        */
+  --fs-caption:  13px;   /* captions, references         */
+  --fs-ui:       15px;   /* buttons, inputs, list rows   */
+  --fs-body:     17px;   /* paragraphs of app text       */
+  --fs-verse:    19px;   /* scripture body               */
+  --fs-h3:       22px;   /* section heads                */
+  --fs-h2:       28px;   /* screen titles                */
+  --fs-h1:       36px;   /* splash, big numbers          */
+  --fs-display:  48px;   /* wordmark at splash           */
+
+  --lh-tight:    1.15;
+  --lh-ui:       1.35;
+  --lh-body:     1.5;
+  --lh-verse:    1.6;    /* scripture needs air          */
+
+  --ls-caps:     0.08em; /* uppercase labels             */
+  --ls-tight:   -0.012em;/* serif at display sizes       */
+
+  /* --- Space (4px base) ------------------------------------------------- */
+  --sp-1:  4px;
+  --sp-2:  8px;
+  --sp-3:  12px;
+  --sp-4:  16px;
+  --sp-5:  24px;
+  --sp-6:  32px;
+  --sp-7:  48px;
+  --sp-8:  64px;
+
+  --gutter: max(16px, env(safe-area-inset-left, 0px));
+  --gutter-r: max(16px, env(safe-area-inset-right, 0px));
+  --measure: 34em;        /* ~65 characters of verse text */
+  --tap: 44px;            /* minimum tap target           */
+  --tabbar-h: 56px;
+
+  /* --- Radii (small; this is a book, not a bubble) ---------------------- */
+  --r-xs:  3px;    /* checkboxes, chips                        */
+  --r-sm:  6px;    /* inputs, buttons                          */
+  --r-md:  10px;   /* sheets, the verse card                   */
+  --r-pill: 999px; /* progress tracks, translation picker tabs */
+
+  /* --- Shadow (one, and only for things that float) --------------------- */
+  --shadow-sheet: 0 -1px 0 var(--rule), 0 -12px 32px rgba(28, 26, 23, 0.08);
+  --shadow-float: 0 1px 2px rgba(28, 26, 23, 0.10), 0 6px 20px rgba(28, 26, 23, 0.08);
+
+  /* --- Motion ----------------------------------------------------------- */
+  --dur-fast:   120ms;   /* state changes: press, toggle, hover */
+  --dur-base:   200ms;   /* reveal a word, open a chip, fade    */
+  --dur-slow:   320ms;   /* a sheet sliding up, a screen change */
+  --ease-out:   cubic-bezier(0.2, 0.7, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.45, 0, 0.2, 1);
 }
+
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) { --bg: #1f1b17; --surface: #27221d; --ink: #efe7d8; --ink-2: #a89f91; --line: #3a332c; --accent: #9ec3b3; --accent-ink: #1f1b17; }
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --paper:        #1F1B16;
+    --surface:      #2A251F;
+    --sunk:         #171411;
+    --rule:         #3B342C;
+    --ink:          #ECE5D8;
+    --ink-2:        #B5AB9B;
+    --ink-3:        #9A9182;
+    --accent:       #9FC6AB;
+    --accent-soft:  #2C3A31;
+    --on-accent:    #15241B;
+    --miss:         #E4998F;
+    --note:         #E0B36A;
+    --shadow-sheet: 0 -1px 0 var(--rule), 0 -12px 32px rgba(0, 0, 0, 0.35);
+    --shadow-float: 0 1px 2px rgba(0, 0, 0, 0.35), 0 6px 20px rgba(0, 0, 0, 0.30);
+  }
 }
-:root[data-theme="dark"] { --bg: #1f1b17; --surface: #27221d; --ink: #efe7d8; --ink-2: #a89f91; --line: #3a332c; --accent: #9ec3b3; --accent-ink: #1f1b17; }
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --paper:        #1F1B16;
+  --surface:      #2A251F;
+  --sunk:         #171411;
+  --rule:         #3B342C;
+  --ink:          #ECE5D8;
+  --ink-2:        #B5AB9B;
+  --ink-3:        #9A9182;
+  --accent:       #9FC6AB;
+  --accent-soft:  #2C3A31;
+  --on-accent:    #15241B;
+  --miss:         #E4998F;
+  --note:         #E0B36A;
+  --shadow-sheet: 0 -1px 0 var(--rule), 0 -12px 32px rgba(0, 0, 0, 0.35);
+  --shadow-float: 0 1px 2px rgba(0, 0, 0, 0.35), 0 6px 20px rgba(0, 0, 0, 0.30);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 0ms;
+    --dur-base: 0ms;
+    --dur-slow: 0ms;
+  }
+}
+
+/* Minimal base so the tokens are usable on their own. */
+html { height: 100%; }
+body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: var(--fs-ui);
+  line-height: var(--lh-ui);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+.verse {
+  font-family: var(--font-serif);
+  font-size: var(--fs-verse);
+  line-height: var(--lh-verse);
+  font-variation-settings: "opsz" 19;
+  max-width: var(--measure);
+  color: var(--ink);
+}
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}

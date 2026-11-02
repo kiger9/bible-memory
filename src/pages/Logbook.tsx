@@ -29,7 +29,7 @@ export default function Logbook() {
         return (
           <Link key={v.id} to={`/practice/${v.id}`} className="row">
             <div>
-              <div className="row-title">{v.reference} <span className="muted">{v.translation.toUpperCase()}</span></div>
+              <div className="row-title">{v.reference} <span className="muted">{(v.translationLabel ?? v.translation.toUpperCase())}</span></div>
               <div className="row-sub">Added {new Date(v.createdAt).toLocaleDateString()} · {mine.length} attempts · best {Math.round(best * 100)}%{r && r.reps > 0 ? ` · next ${new Date(r.due).toLocaleDateString()}` : ''}</div>
             </div>
             <span className="chev">›</span>

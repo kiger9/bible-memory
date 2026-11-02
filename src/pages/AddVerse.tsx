@@ -16,6 +16,9 @@ export default function AddVerse() {
   const [preview, setPreview] = useState<{ text: string; reference: string; verseEnd: number } | null>(null)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  const [ownText, setOwnText] = useState('')
+  const [ownLabel, setOwnLabel] = useState('NIV')
+  const isManual = translation === 'custom'
 
   useEffect(() => { getSettings().then(s => setTranslation(s.defaultTranslation)) }, [])
 
@@ -23,6 +26,12 @@ export default function AddVerse() {
     setError(''); setPreview(null)
     const parsed = parseReference(ref)
     if ('error' in parsed) { setError(parsed.error); return }
+    if (isManual) {
+      const text = ownText.replace(/\s+/g, ' ').trim()
+      if (!text) { setError('Paste the verse text from your Bible.'); return }
+      setPreview({ text, reference: parsed.canonical, verseEnd: parsed.verseEnd === 999 ? parsed.verseStart : parsed.verseEnd })
+      return
+    }
     setBusy(true)
     try { setPreview(await fetchPassage(parsed, translation)) }
     catch (e) { setError((e as Error).message) }
@@ -38,13 +47,13 @@ export default function AddVerse() {
     try {
       const r = await fetch('/api/hints', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reference: preview.reference, translation: getTranslation(translation).abbr, words }),
+        body: JSON.stringify({ reference: preview.reference, translation: isManual ? ownLabel : getTranslation(translation).abbr, words }),
       })
       if (r.ok) chunks = (await r.json()).chunks
     } catch { /* hints are optional; first-letter hints still work */ }
     const id = await db.verses.add({
       reference: preview.reference, bookId: parsed.book.id, chapter: parsed.chapter,
-      verseStart: parsed.verseStart, verseEnd: preview.verseEnd, translation,
+      verseStart: parsed.verseStart, verseEnd: preview.verseEnd, translation, translationLabel: isManual ? ownLabel.trim() || 'Own' : undefined,
       text: preview.text, words, chunks, createdAt: Date.now(),
     })
     await db.reviews.put(newReviewState(id as number))
@@ -66,12 +75,24 @@ export default function AddVerse() {
             {TRANSLATIONS.map(t => <option key={t.id} value={t.id}>{t.abbr} — {t.name}</option>)}
           </select>
         </label>
-        <button className="button primary" disabled={busy || !ref.trim()}>{busy ? 'Looking up…' : 'Look up'}</button>
+        {isManual && (
+          <>
+            <label className="field">
+              <span>Translation name</span>
+              <input value={ownLabel} onChange={e => setOwnLabel(e.target.value)} placeholder="NIV" />
+            </label>
+            <label className="field">
+              <span>Verse text</span>
+              <textarea value={ownText} onChange={e => setOwnText(e.target.value)} rows={5} placeholder="Paste or type the passage exactly as printed in your Bible." />
+            </label>
+          </>
+        )}
+        <button className="button primary" disabled={busy || !ref.trim()}>{busy ? 'Looking up…' : isManual ? 'Preview' : 'Look up'}</button>
         {error && <p className="error" role="alert">{error}</p>}
       </form>
       {preview && (
         <section>
-          <VerseText text={preview.text} reference={`${preview.reference} (${getTranslation(translation).abbr})`} />
+          <VerseText text={preview.text} reference={`${preview.reference} (${isManual ? ownLabel : getTranslation(translation).abbr})`} />
           <button className="button primary" onClick={save} disabled={busy}>{busy ? 'Saving…' : 'Memorize this'}</button>
           <p className="attribution">{getTranslation(translation).attribution}</p>
         </section>

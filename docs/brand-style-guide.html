@@ -1,0 +1,986 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kept Brand Guide</title>
+<meta name="description" content="Brand and UI style guide for Kept, a Bible verse memorization app: wordmarks, type, color, components, and phone mockups.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+/* Layout concept: a single reading column (the guide) that widens into a
+   gallery only for the phone mockups. The guide is set in the brand's own
+   tokens so the page itself is the first specimen. */
+:root {
+  color-scheme: light;
+  --paper:#F5F3EE; --surface:#FBFAF7; --sunk:#ECE8DF; --rule:#D9D3C7;
+  --ink:#1C1A17; --ink-2:#5A554D; --ink-3:#6B655C;
+  --accent:#2E5A45; --accent-soft:#DCE7DF; --on-accent:#F5F3EE;
+  --miss:#8A2E2B; --note:#8A5A12;
+  --shadow-sheet: 0 -1px 0 var(--rule), 0 -12px 32px rgba(28,26,23,.08);
+  --font-serif:"Newsreader","Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  --font-sans:"Instrument Sans","Avenir Next","Segoe UI","Helvetica Neue",Arial,sans-serif;
+  --dur-fast:120ms; --dur-base:200ms; --dur-slow:320ms;
+  --ease-out:cubic-bezier(.2,.7,.2,1);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --paper:#1F1B16; --surface:#2A251F; --sunk:#171411; --rule:#3B342C;
+    --ink:#ECE5D8; --ink-2:#B5AB9B; --ink-3:#9A9182;
+    --accent:#9FC6AB; --accent-soft:#2C3A31; --on-accent:#15241B;
+    --miss:#E4998F; --note:#E0B36A;
+    --shadow-sheet: 0 -1px 0 var(--rule), 0 -12px 32px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --paper:#1F1B16; --surface:#2A251F; --sunk:#171411; --rule:#3B342C;
+  --ink:#ECE5D8; --ink-2:#B5AB9B; --ink-3:#9A9182;
+  --accent:#9FC6AB; --accent-soft:#2C3A31; --on-accent:#15241B;
+  --miss:#E4998F; --note:#E0B36A;
+  --shadow-sheet: 0 -1px 0 var(--rule), 0 -12px 32px rgba(0,0,0,.35);
+}
+/* Forced-theme panels for side-by-side swatches and mockups. */
+.t-light { color-scheme: light;
+  --paper:#F5F3EE; --surface:#FBFAF7; --sunk:#ECE8DF; --rule:#D9D3C7;
+  --ink:#1C1A17; --ink-2:#5A554D; --ink-3:#6B655C;
+  --accent:#2E5A45; --accent-soft:#DCE7DF; --on-accent:#F5F3EE;
+  --miss:#8A2E2B; --note:#8A5A12;
+  --shadow-sheet: 0 -1px 0 var(--rule), 0 -12px 32px rgba(28,26,23,.08); }
+.t-dark { color-scheme: dark;
+  --paper:#1F1B16; --surface:#2A251F; --sunk:#171411; --rule:#3B342C;
+  --ink:#ECE5D8; --ink-2:#B5AB9B; --ink-3:#9A9182;
+  --accent:#9FC6AB; --accent-soft:#2C3A31; --on-accent:#15241B;
+  --miss:#E4998F; --note:#E0B36A;
+  --shadow-sheet: 0 -1px 0 var(--rule), 0 -12px 32px rgba(0,0,0,.35); }
+
+@media (prefers-reduced-motion: reduce) { :root { --dur-fast:0ms; --dur-base:0ms; --dur-slow:0ms; } }
+
+*,*::before,*::after { box-sizing:border-box; }
+html { height:100%; }
+body {
+  margin:0; min-height:100%;
+  background:var(--paper); color:var(--ink);
+  font-family:var(--font-sans); font-size:17px; line-height:1.5;
+  -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+  padding-left:max(16px, env(safe-area-inset-left,0px));
+  padding-right:max(16px, env(safe-area-inset-right,0px));
+  padding-block:0 96px;
+}
+a { color:var(--accent); }
+h1,h2,h3,h4 { font-family:var(--font-serif); font-weight:500; margin:0; text-wrap:balance; letter-spacing:-.012em; }
+h1 { font-size:48px; line-height:1.1; font-variation-settings:"opsz" 48; }
+h2 { font-size:28px; line-height:1.2; font-variation-settings:"opsz" 28; }
+h3 { font-size:22px; line-height:1.25; font-variation-settings:"opsz" 22; }
+p { margin:0; }
+.wrap { max-width:1120px; margin:0 auto; }
+.col { max-width:680px; }
+.eyebrow { font-size:12px; font-weight:500; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3); }
+.muted { color:var(--ink-2); }
+.meta { color:var(--ink-3); font-size:13px; }
+.serif { font-family:var(--font-serif); }
+.verse { font-family:var(--font-serif); font-size:19px; line-height:1.6; font-variation-settings:"opsz" 19; max-width:34em; color:var(--ink); }
+.ref { font-size:13px; color:var(--ink-3); margin-top:12px; }
+.tnum { font-variant-numeric:tabular-nums; }
+code { font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:.88em; background:var(--sunk); padding:1px 5px; border-radius:3px; }
+hr.rule { border:0; border-top:1px solid var(--rule); margin:0; }
+
+/* --- Page chrome --- */
+.masthead { display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:16px; padding-block:40px 24px; border-bottom:1px solid var(--rule); }
+.masthead .lede { max-width:46ch; color:var(--ink-2); }
+.toc { display:flex; flex-wrap:wrap; gap:4px 20px; padding-block:16px 0; font-size:15px; }
+.toc a { text-decoration:none; color:var(--ink-2); }
+.toc a:hover { color:var(--accent); }
+section.g { padding-block:56px 0; }
+section.g > header { display:grid; gap:8px; margin-bottom:28px; }
+section.g > header p { max-width:60ch; color:var(--ink-2); }
+.grid { display:grid; gap:24px; }
+.grid-2 { grid-template-columns:repeat(auto-fit, minmax(min(100%, 300px), 1fr)); }
+.grid-3 { grid-template-columns:repeat(auto-fit, minmax(min(100%, 260px), 1fr)); }
+.panel { background:var(--surface); border:1px solid var(--rule); border-radius:10px; padding:24px; min-width:0; }
+.label { font-size:13px; color:var(--ink-3); margin-bottom:12px; }
+
+/* --- Wordmarks --- */
+.mark {
+  display:inline-block; width:10px; height:16px; background:var(--accent);
+  clip-path:polygon(0 0, 100% 0, 100% 100%, 50% 72%, 0 100%);
+  flex:none;
+}
+.wordmark { display:inline-flex; align-items:center; gap:.4em; font-family:var(--font-serif); font-weight:500; letter-spacing:-.012em; color:var(--ink); line-height:1; }
+.wordmark.sz-tab { font-size:14px; gap:.35em; }
+.wordmark.sz-tab .mark { width:7px; height:11px; }
+.wordmark.sz-header { font-size:22px; font-variation-settings:"opsz" 22; }
+.wordmark.sz-splash { font-size:48px; letter-spacing:-.02em; font-variation-settings:"opsz" 48; gap:.3em; }
+.wordmark.sz-splash .mark { width:20px; height:32px; }
+.wm-verbatim { font-family:var(--font-serif); font-weight:400; text-transform:uppercase; letter-spacing:.14em; font-size:26px; display:inline-flex; align-items:center; gap:.5em; color:var(--ink); }
+.wm-verbatim::before,.wm-verbatim::after { content:""; width:1px; height:.9em; background:var(--accent); }
+.wm-lamp { font-family:var(--font-serif); font-style:italic; font-weight:500; font-size:30px; display:inline-flex; align-items:center; gap:.35em; color:var(--ink); letter-spacing:-.01em; }
+.lamp-mark { position:relative; width:14px; height:22px; flex:none; }
+.lamp-mark::before { content:""; position:absolute; left:0; bottom:0; width:14px; height:14px; border-radius:50%; border:1.5px solid var(--accent); }
+.lamp-mark::after { content:""; position:absolute; left:5px; top:0; width:4px; height:4px; border-radius:50%; background:var(--accent); }
+.cand { display:grid; gap:16px; }
+.cand .stage { background:var(--paper); border:1px solid var(--rule); border-radius:6px; padding:36px 24px; display:flex; align-items:center; justify-content:center; min-height:120px; }
+.cand .rec { color:var(--accent); font-weight:500; font-size:13px; }
+.sizes { display:grid; gap:24px; grid-template-columns:repeat(auto-fit, minmax(min(100%, 220px), 1fr)); align-items:end; }
+.sizes > div { display:grid; gap:12px; align-content:end; }
+
+/* App icon */
+.icon-512 { width:512px; height:512px; background:#2E5A45; border-radius:112px; position:relative; overflow:hidden; color:#F5F3EE; transform-origin:top left; }
+.icon-512 .k { position:absolute; left:0; right:0; bottom:48px; text-align:center; font-family:var(--font-serif); font-weight:500; font-size:340px; line-height:1; font-variation-settings:"opsz" 72; letter-spacing:-.03em; }
+.icon-512 .ribbon { position:absolute; top:0; left:84px; width:56px; height:96px; background:#F5F3EE; clip-path:polygon(0 0, 100% 0, 100% 100%, 50% 72%, 0 100%); }
+.icon-scale { width:192px; height:192px; }
+.icon-scale .icon-512 { transform:scale(.375); }
+.icon-60 { width:60px; height:60px; border-radius:13px; background:#2E5A45; color:#F5F3EE; position:relative; overflow:hidden; }
+.icon-60 .k { position:absolute; inset:auto 0 5px; text-align:center; font-family:var(--font-serif); font-weight:500; font-size:40px; line-height:1; letter-spacing:-.03em; }
+.icon-60 .ribbon { position:absolute; top:0; left:10px; width:7px; height:12px; background:#F5F3EE; clip-path:polygon(0 0, 100% 0, 100% 100%, 50% 72%, 0 100%); }
+.homescreen { display:grid; justify-items:center; gap:6px; font-size:11px; color:var(--ink-2); }
+
+/* --- Type specimens --- */
+.spec { display:grid; gap:20px; }
+.spec-row { display:grid; grid-template-columns:minmax(0,1fr); gap:6px; padding-block:16px; border-top:1px solid var(--rule); }
+.spec-row .meta { font-size:13px; }
+@media (min-width:640px) { .spec-row { grid-template-columns:140px minmax(0,1fr); align-items:baseline; } }
+.t-display { font-family:var(--font-serif); font-size:48px; line-height:1.1; font-weight:500; letter-spacing:-.02em; }
+.t-h1 { font-family:var(--font-serif); font-size:36px; line-height:1.15; font-weight:500; }
+.t-h2 { font-family:var(--font-serif); font-size:28px; line-height:1.2; font-weight:500; }
+.t-h3 { font-family:var(--font-serif); font-size:22px; line-height:1.25; font-weight:500; }
+.t-body { font-size:17px; line-height:1.5; }
+.t-ui { font-size:15px; line-height:1.35; font-weight:500; }
+.t-caption { font-size:13px; line-height:1.35; }
+.t-micro { font-size:12px; line-height:1.2; font-weight:500; letter-spacing:.08em; text-transform:uppercase; }
+.pairing { display:grid; gap:24px; grid-template-columns:repeat(auto-fit, minmax(min(100%, 300px), 1fr)); }
+.pairing .big { font-size:64px; line-height:1; margin-bottom:12px; }
+.pairing .sans-big { font-family:var(--font-sans); font-weight:500; letter-spacing:-.01em; }
+.pairing .serif-big { font-family:var(--font-serif); font-weight:500; letter-spacing:-.02em; }
+
+/* --- Color --- */
+.swatches { display:grid; gap:12px; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); }
+.sw { border-radius:6px; overflow:hidden; border:1px solid var(--rule); background:var(--surface); min-width:0; }
+.sw .chip { height:64px; }
+.sw .info { padding:10px 12px; display:grid; gap:2px; }
+.sw .name { font-size:13px; font-weight:500; }
+.sw .hex { font-size:12px; color:var(--ink-3); font-family:ui-monospace, Menlo, monospace; }
+.theme-panel { background:var(--paper); color:var(--ink); border:1px solid var(--rule); border-radius:10px; padding:20px; min-width:0; }
+.theme-panel h4 { font-size:22px; margin-bottom:16px; }
+.ctable { width:100%; border-collapse:collapse; font-size:14px; }
+.ctable th, .ctable td { text-align:left; padding:8px 10px; border-top:1px solid var(--rule); vertical-align:top; }
+.ctable th { font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3); font-weight:500; border-top:0; }
+.ctable td.n { text-align:right; font-variant-numeric:tabular-nums; }
+.pass { color:var(--accent); font-weight:500; }
+.tscroll { overflow-x:auto; }
+.demo-pairs { display:grid; gap:8px; grid-template-columns:repeat(auto-fit, minmax(min(100%,180px),1fr)); }
+.demo-pairs > div { padding:12px 14px; border-radius:6px; font-size:15px; }
+
+/* --- Spacing --- */
+.space-row { display:flex; align-items:center; gap:16px; padding-block:8px; border-top:1px solid var(--rule); font-size:14px; }
+.space-row .bar { height:16px; background:var(--accent-soft); border-left:2px solid var(--accent); }
+.space-row .k { width:64px; color:var(--ink-3); font-variant-numeric:tabular-nums; }
+.radii { display:flex; flex-wrap:wrap; gap:24px; align-items:flex-end; }
+.radii .r { width:72px; height:56px; background:var(--sunk); border:1px solid var(--rule); display:grid; place-items:center; font-size:12px; color:var(--ink-3); }
+
+/* --- Components --- */
+.btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; height:48px; padding:0 20px; border-radius:6px; font:600 15px/1 var(--font-sans); border:1px solid transparent; cursor:pointer; transition:background var(--dur-fast) var(--ease-out), filter var(--dur-fast) var(--ease-out); min-width:44px; }
+.btn-primary { background:var(--accent); color:var(--on-accent); }
+.btn-primary:active { filter:brightness(.92); }
+.btn-secondary { background:transparent; color:var(--ink); border-color:var(--rule); }
+.btn-quiet { background:transparent; color:var(--accent); padding:0 8px; height:44px; font-weight:500; }
+.btn-disabled { background:var(--sunk); color:var(--ink-3); pointer-events:none; }
+.btn-danger { background:transparent; color:var(--miss); border-color:var(--rule); }
+.btn.block { width:100%; }
+.btn:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+.field { display:grid; gap:8px; }
+.field label { font-size:13px; color:var(--ink-2); font-weight:500; }
+.input { width:100%; height:48px; padding:0 14px; border:1px solid var(--rule); border-radius:6px; background:var(--surface); color:var(--ink); font:400 15px/1 var(--font-sans); }
+.input:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+.input.is-focus { outline:2px solid var(--accent); outline-offset:2px; }
+.input.is-error { border-color:var(--miss); }
+.field .err { font-size:13px; color:var(--miss); }
+.textarea { height:auto; min-height:120px; padding:12px 14px; font:400 19px/1.6 var(--font-serif); font-variation-settings:"opsz" 19; resize:vertical; }
+.pills { display:flex; flex-wrap:wrap; gap:8px; }
+.pill { height:36px; padding:0 14px; border-radius:999px; display:inline-flex; align-items:center; font:500 14px/1 var(--font-sans); background:var(--sunk); color:var(--ink-2); border:0; }
+.pill.on { background:var(--accent); color:var(--on-accent); }
+.verse-card { background:var(--surface); border:1px solid var(--rule); border-radius:10px; padding:24px; display:grid; gap:16px; }
+.dots { display:flex; gap:6px; align-items:center; }
+.dots i { width:6px; height:6px; border-radius:50%; background:var(--sunk); border:1px solid var(--rule); }
+.dots i.on { background:var(--accent); border-color:var(--accent); }
+.progress { display:grid; gap:8px; }
+.progress .row { display:flex; justify-content:space-between; font-size:13px; color:var(--ink-2); }
+.track { height:4px; background:var(--sunk); border-radius:999px; overflow:hidden; }
+.track > i { display:block; height:100%; background:var(--accent); border-radius:999px; transition:width var(--dur-slow) var(--ease-out); }
+.ladder { display:grid; gap:4px; }
+.rung { display:flex; align-items:center; gap:12px; min-height:44px; padding:0 12px; border-radius:6px; border:1px solid transparent; font-size:15px; color:var(--ink-3); }
+.rung .n { width:20px; font-variant-numeric:tabular-nums; font-size:13px; }
+.rung.used { background:var(--accent-soft); color:var(--accent); }
+.rung.next { border-color:var(--rule); color:var(--ink); }
+.rung .ic { margin-left:auto; }
+.logrow { display:flex; align-items:center; gap:12px; min-height:56px; padding:8px 0; border-top:1px solid var(--rule); font-size:15px; }
+.logrow:last-child { border-bottom:1px solid var(--rule); }
+.logrow .r { font-weight:500; min-width:0; }
+.logrow .res { color:var(--ink-2); display:inline-flex; align-items:center; gap:6px; font-size:14px; }
+.logrow .d { margin-left:auto; color:var(--ink-3); font-size:13px; font-variant-numeric:tabular-nums; white-space:nowrap; }
+.quiz-card { display:grid; gap:20px; padding:32px 24px; text-align:center; position:relative; background:var(--surface); border:1px solid var(--rule); border-radius:10px; overflow:hidden; }
+.quiz-card .timer { position:absolute; top:0; left:0; height:4px; width:62%; background:var(--note); }
+.quiz-card .q { font-family:var(--font-serif); font-size:28px; font-weight:500; line-height:1.2; }
+
+/* Icons */
+.ic { width:24px; height:24px; stroke:currentColor; fill:none; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; flex:none; }
+.ic.sm { width:16px; height:16px; stroke-width:1.75; }
+.ic.md { width:20px; height:20px; stroke-width:1.75; }
+.iconrow { display:flex; flex-wrap:wrap; gap:20px; }
+.iconrow > div { display:grid; justify-items:center; gap:6px; font-size:12px; color:var(--ink-3); width:64px; }
+
+/* --- Phone mockups --- */
+.phones { display:grid; gap:32px; grid-template-columns:repeat(auto-fill, minmax(min(100%, 390px), 390px)); justify-content:start; }
+.phone { width:min(390px,100%); height:844px; background:var(--paper); color:var(--ink); border:1px solid var(--rule); border-radius:40px; overflow:hidden; display:flex; flex-direction:column; position:relative; box-shadow:0 0 0 6px var(--sunk); }
+.phone .status { height:50px; display:flex; align-items:flex-end; justify-content:space-between; padding:0 32px 8px; font-size:14px; font-weight:600; font-variant-numeric:tabular-nums; }
+.phone .status .cell { display:flex; gap:5px; align-items:center; }
+.phone .status .cell i { display:block; width:16px; height:9px; border:1px solid currentColor; border-radius:2px; position:relative; }
+.phone .status .cell i::after { content:""; position:absolute; inset:1px; right:4px; background:currentColor; border-radius:1px; }
+.screen { flex:1; min-height:0; overflow:hidden; padding:8px 24px 0; display:flex; flex-direction:column; gap:24px; }
+.screen .title { font-family:var(--font-serif); font-size:28px; font-weight:500; line-height:1.2; letter-spacing:-.012em; }
+.screen .head { display:grid; gap:4px; }
+.tabbar { height:calc(56px + 20px); padding-bottom:20px; border-top:1px solid var(--rule); background:var(--paper); display:grid; grid-template-columns:repeat(4,1fr); }
+.tab { display:grid; justify-items:center; align-content:center; gap:3px; min-height:44px; font-size:12px; font-weight:500; color:var(--ink-3); }
+.tab.on { color:var(--ink); }
+.tab.on .ic { color:var(--accent); }
+.screen .section-h { font-family:var(--font-serif); font-size:22px; font-weight:500; line-height:1.25; }
+.due { display:grid; }
+.due .row { display:flex; align-items:center; justify-content:space-between; min-height:48px; border-top:1px solid var(--rule); font-size:15px; }
+.due .row:last-child { border-bottom:1px solid var(--rule); }
+.due .row .m { color:var(--ink-3); font-size:13px; }
+.topnav { display:flex; align-items:center; gap:4px; min-height:44px; margin-left:-8px; color:var(--ink-2); font-size:15px; }
+.topnav .back { display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; }
+.words { font-family:var(--font-serif); font-size:19px; line-height:1.9; font-variation-settings:"opsz" 19; display:flex; flex-wrap:wrap; gap:0 .3em; }
+.words span { border-bottom:1.5px solid var(--rule); min-width:2.2em; text-align:left; color:var(--ink); padding:0 .05em; line-height:1.35; }
+.words span.done { border-bottom-color:transparent; }
+.words span.cur { border-bottom:2px solid var(--accent); }
+.words span.slip { color:var(--miss); border-bottom-color:var(--miss); }
+.words span.empty { color:transparent; }
+.kbd { margin:0 -24px; background:var(--sunk); padding:8px 6px 0; display:grid; gap:8px; }
+.kbd .r { display:flex; gap:5px; justify-content:center; }
+.kbd b { display:block; flex:1 1 0; min-width:0; max-width:34px; height:40px; background:var(--surface); border-radius:5px; font:400 16px/40px var(--font-sans); text-align:center; color:var(--ink); box-shadow:0 1px 0 var(--rule); }
+.kbd b.w { flex:1.7 1 0; max-width:60px; font-size:12px; }
+.kbd b.sp { flex:6 1 0; max-width:190px; }
+.above-kbd { display:flex; gap:8px; align-items:center; margin:0 -24px; padding:8px 16px; border-top:1px solid var(--rule); background:var(--surface); }
+.mic-wrap { display:grid; justify-items:center; gap:12px; }
+.mic { width:64px; height:64px; border-radius:50%; display:grid; place-items:center; color:var(--accent); border:1.5px solid var(--accent); position:relative; }
+.mic::before { content:""; position:absolute; inset:-8px; border-radius:50%; border:1.5px solid var(--accent); opacity:.35; animation:pulse 1.6s ease-in-out infinite alternate; }
+@keyframes pulse { from { opacity:.25; } to { opacity:.7; } }
+@media (prefers-reduced-motion: reduce) { .mic::before { animation:none; } }
+.transcript { font-family:var(--font-serif); font-size:19px; line-height:1.6; font-variation-settings:"opsz" 19; }
+.transcript .pending { color:var(--ink-3); }
+.sheet { position:absolute; left:0; right:0; bottom:0; background:var(--surface); border-radius:10px 10px 0 0; box-shadow:var(--shadow-sheet); padding:8px 16px 28px; display:grid; gap:12px; }
+.sheet .handle { width:36px; height:4px; border-radius:2px; background:var(--rule); margin:0 auto 4px; }
+.sheet .sh { display:flex; justify-content:space-between; align-items:baseline; }
+.sheet .sh b { font-family:var(--font-serif); font-size:22px; font-weight:500; }
+.sheet .sh span { font-size:13px; color:var(--ink-3); }
+.scrim { position:absolute; inset:0; background:rgba(0,0,0,.18); }
+.hinted { font-family:var(--font-serif); font-size:19px; line-height:1.6; font-variation-settings:"opsz" 19; color:var(--ink-2); letter-spacing:.02em; }
+.hinted b { font-weight:400; color:var(--ink); }
+.month { display:grid; gap:0; }
+.month .day { font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3); font-weight:500; padding:20px 0 6px; }
+.summary { font-size:15px; color:var(--ink-2); }
+.quiz-screen { flex:1; display:grid; align-content:center; justify-items:center; gap:28px; text-align:center; padding-bottom:40px; }
+.quiz-screen .qref { font-family:var(--font-serif); font-size:36px; font-weight:500; line-height:1.15; letter-spacing:-.015em; }
+.quiz-screen .cta { display:grid; gap:10px; width:100%; }
+
+/* --- Voice table / do-don't --- */
+.voice { display:grid; gap:0; }
+.voice .row { display:grid; grid-template-columns:minmax(0,1fr); gap:4px; padding-block:12px; border-top:1px solid var(--rule); }
+@media (min-width:640px) { .voice .row { grid-template-columns:200px minmax(0,1fr); gap:16px; } }
+.voice .row .k { font-size:13px; color:var(--ink-3); }
+.voice .row .v { font-family:var(--font-serif); font-size:19px; line-height:1.4; font-variation-settings:"opsz" 19; }
+.dodont { display:grid; gap:24px; grid-template-columns:repeat(auto-fit, minmax(min(100%, 300px), 1fr)); }
+.dodont ul { margin:0; padding-left:0; list-style:none; display:grid; gap:10px; }
+.dodont li { padding-left:22px; position:relative; font-size:15px; line-height:1.4; }
+.dodont li::before { content:""; position:absolute; left:0; top:.45em; width:10px; height:10px; border-radius:50%; }
+.dodont .do li::before { background:var(--accent); }
+.dodont .dont li::before { background:var(--miss); }
+.motion { display:grid; gap:12px; }
+.motion .row { display:grid; grid-template-columns:90px minmax(0,1fr); gap:16px; padding-block:10px; border-top:1px solid var(--rule); font-size:15px; }
+.motion .row .k { font-variant-numeric:tabular-nums; color:var(--accent); font-weight:500; }
+.demo-sheet { position:relative; height:120px; background:var(--paper); border:1px solid var(--rule); border-radius:10px; overflow:hidden; }
+.demo-sheet .sheet { padding-bottom:16px; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></symbol>
+  <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+  <symbol id="i-mic" viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v3"/></symbol>
+  <symbol id="i-keyboard" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M6 12h.01M10 12h.01M14 12h.01M18 12h.01M7 16h10"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-chev-l" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+  <symbol id="i-chev-r" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+  <symbol id="i-buoy" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><path d="m4.93 4.93 4.24 4.24M14.83 14.83l4.24 4.24M14.83 9.17l4.24-4.24M9.17 14.83l-4.24 4.24"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+</svg>
+
+<div class="wrap">
+
+<header class="masthead">
+  <div style="display:grid;gap:16px">
+    <span class="wordmark sz-header"><i class="mark"></i>Kept</span>
+    <h1>Brand &amp; UI Guide</h1>
+    <p class="lede">A personal Bible verse memorization app that should feel like a notebook under a lamp: paper, ink, one green ribbon. This page is set in its own tokens, so it is also the first specimen.</p>
+  </div>
+  <div class="meta">Version 1.0 · November 2026<br>Light and dark follow your system setting.</div>
+</header>
+<nav class="toc" aria-label="Sections">
+  <a href="#name">Name &amp; wordmark</a><a href="#type">Type</a><a href="#color">Color</a><a href="#space">Space</a><a href="#components">Components</a><a href="#screens">Screens</a><a href="#voice">Voice</a><a href="#icons">Icons</a><a href="#motion">Motion</a><a href="#rules">Do / Don't</a>
+</nav>
+
+<!-- ============================ NAME ============================ -->
+<section class="g" id="name">
+  <header>
+    <span class="eyebrow">01 · Name &amp; wordmark</span>
+    <h2>Three candidates, one recommendation</h2>
+    <p>Each name was checked against the App Store and search in November 2026. None is a well-known app in this category. Verso, By Heart, Abide and Lectio were considered and dropped as taken.</p>
+  </header>
+
+  <div class="grid grid-3">
+    <div class="panel cand">
+      <div class="stage"><span class="wordmark sz-splash" style="font-size:44px"><i class="mark"></i>Kept</span></div>
+      <div>
+        <p class="rec">Recommended</p>
+        <h3>Kept</h3>
+        <p class="muted" style="font-size:15px;margin-top:8px">Psalm 119: <em class="serif">"I have kept thy word."</em> One syllable, past tense and settled. Newsreader 500, sentence case, −0.012em. The ribbon mark (a bookmark, drawn in CSS) says your place is held.</p>
+      </div>
+    </div>
+    <div class="panel cand">
+      <div class="stage"><span class="wm-verbatim">Verbatim</span></div>
+      <div>
+        <p class="meta">Candidate</p>
+        <h3>Verbatim</h3>
+        <p class="muted" style="font-size:15px;margin-top:8px">"Word for word." Honest about what the app trains. Newsreader 400, caps, +0.14em, with two hairline rules as an open quote. Eight letters truncate under a home-screen icon.</p>
+      </div>
+    </div>
+    <div class="panel cand">
+      <div class="stage"><span class="wm-lamp"><i class="lamp-mark"></i>Lamp</span></div>
+      <div>
+        <p class="meta">Candidate</p>
+        <h3>Lamp</h3>
+        <p class="muted" style="font-size:15px;margin-top:8px">Psalm 119:105. Warm, and it names the dark mode. Newsreader 500 italic with a two-shape flame mark. The word is generic; discoverability is poor.</p>
+      </div>
+    </div>
+  </div>
+
+  <h3 style="margin:48px 0 20px">Kept at every size</h3>
+  <div class="sizes">
+    <div>
+      <p class="label">Tab bar / brand badge · 14px</p>
+      <div class="panel" style="padding:16px;display:flex;align-items:center;gap:24px">
+        <span class="wordmark sz-tab"><i class="mark"></i>Kept</span>
+        <i class="mark" style="width:7px;height:11px"></i>
+        <span class="meta">mark alone, 12px</span>
+      </div>
+    </div>
+    <div>
+      <p class="label">Screen header · 22px</p>
+      <div class="panel" style="padding:16px"><span class="wordmark sz-header"><i class="mark"></i>Kept</span></div>
+    </div>
+    <div>
+      <p class="label">Splash · 48px</p>
+      <div class="panel" style="padding:24px 16px"><span class="wordmark sz-splash"><i class="mark"></i>Kept</span></div>
+    </div>
+  </div>
+
+  <h3 style="margin:48px 0 20px">App icon</h3>
+  <div class="grid grid-2" style="align-items:start">
+    <div class="panel" style="display:grid;gap:16px">
+      <p class="label">512 × 512 concept, shown at 37.5%. Vestry green ground, paper "K" in Newsreader 500, the ribbon tucked at the top edge. No gradient, no gloss, no inner shadow.</p>
+      <div class="icon-scale"><div class="icon-512"><i class="ribbon"></i><span class="k">K</span></div></div>
+      <p class="meta">Export the mark with a flat #2E5A45 ground at 512, 192, 180 and 120. iOS applies its own corner mask; Android gets the same square with a 112px radius.</p>
+    </div>
+    <div class="panel" style="display:grid;gap:16px">
+      <p class="label">On a home screen · 60px</p>
+      <div style="display:flex;gap:28px;flex-wrap:wrap">
+        <div class="homescreen"><div class="icon-60"><i class="ribbon"></i><span class="k">K</span></div><span>Kept</span></div>
+        <div class="homescreen"><div class="icon-60" style="background:var(--sunk);color:var(--ink-3)"><span class="k" style="font-family:var(--font-sans);font-size:11px;bottom:22px">other</span></div><span>Mail</span></div>
+        <div class="homescreen"><div class="icon-60" style="background:var(--sunk);color:var(--ink-3)"><span class="k" style="font-family:var(--font-sans);font-size:11px;bottom:22px">other</span></div><span>Notes</span></div>
+      </div>
+      <p class="meta">Clear space around every lockup equals the ribbon's height. Never outline, stretch, shadow, or set the word in the sans.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ TYPE ============================ -->
+<section class="g" id="type">
+  <header>
+    <span class="eyebrow">02 · Typography</span>
+    <h2>Newsreader for the word, Instrument Sans for the tools</h2>
+    <p>Newsreader carries scripture, titles and the wordmark; its optical-size axis makes 19px verse text sturdy on a phone while the 48px splash stays fine. Instrument Sans does the quiet work: buttons, inputs, labels, numbers that line up.</p>
+  </header>
+
+  <div class="pairing">
+    <div class="panel">
+      <div class="big serif-big">Newsreader</div>
+      <p class="muted" style="font-size:15px">Production Type. Variable, opsz 6–72, true italics. Designed for long-form on-screen reading. Weights 400 and 500 only; 600 for a single big number.</p>
+    </div>
+    <div class="panel">
+      <div class="big sans-big">Instrument Sans</div>
+      <p class="muted" style="font-size:15px">Rodrigo Fuenzalida. Slightly narrow humanist grotesk, tabular figures, enough character to not read as a system default. Weights 400, 500, 600.</p>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-top:24px">
+    <p class="label">Verse setting · 19px / 1.6 · max 34em · never justified or centered</p>
+    <p class="verse">Thy word have I hid in mine heart, that I might not sin against thee.</p>
+    <p class="ref">Psalm 119:11 · KJV</p>
+    <p class="verse" style="margin-top:24px">But they that wait upon the <span style="font-variant:small-caps;letter-spacing:.04em">Lord</span> shall renew their strength; they shall mount up with wings as eagles; they shall run, and not be weary; and they shall walk, and not faint.</p>
+    <p class="ref">Isaiah 40:31 · KJV</p>
+  </div>
+
+  <div class="spec" style="margin-top:32px">
+    <div class="spec-row"><span class="meta">display · 48/1.1 · serif 500</span><span class="t-display">Kept</span></div>
+    <div class="spec-row"><span class="meta">h1 · 36/1.15 · serif 500</span><span class="t-h1 tnum">Seven days in a row</span></div>
+    <div class="spec-row"><span class="meta">h2 · 28/1.2 · serif 500</span><span class="t-h2">Today</span></div>
+    <div class="spec-row"><span class="meta">h3 · 22/1.25 · serif 500</span><span class="t-h3">Also due</span></div>
+    <div class="spec-row"><span class="meta">verse · 19/1.6 · serif 400</span><span class="verse">God is our refuge and strength, a very present help in trouble.</span></div>
+    <div class="spec-row"><span class="meta">body · 17/1.5 · sans 400</span><span class="t-body">Paste the text as printed. Punctuation counts.</span></div>
+    <div class="spec-row"><span class="meta">ui · 15/1.35 · sans 500</span><span class="t-ui">Save to Verses</span></div>
+    <div class="spec-row"><span class="meta">caption · 13/1.35 · sans 400</span><span class="t-caption muted">Romans 8:28 · ESV · reviewed Thursday</span></div>
+    <div class="spec-row"><span class="meta">micro · 12/1.2 · sans 500 · +.08em</span><span class="t-micro muted">Sunday · 2 November</span></div>
+  </div>
+</section>
+
+<!-- ============================ COLOR ============================ -->
+<section class="g" id="color">
+  <header>
+    <span class="eyebrow">03 · Color</span>
+    <h2>Paper, ink, and one green ribbon</h2>
+    <p>Warm neutrals, a single accent (vestry green), oxblood only for a slip or a delete, amber only for "due today". Dark mode is a lamp-lit study: warm near-black, never #000. Both palettes are shown here regardless of your system setting.</p>
+  </header>
+
+  <div class="grid grid-2">
+    <div class="theme-panel t-light">
+      <h4>Light · paper</h4>
+      <div class="swatches">
+        <div class="sw"><div class="chip" style="background:#F5F3EE"></div><div class="info"><span class="name">paper</span><span class="hex">#F5F3EE</span></div></div>
+        <div class="sw"><div class="chip" style="background:#FBFAF7"></div><div class="info"><span class="name">surface</span><span class="hex">#FBFAF7</span></div></div>
+        <div class="sw"><div class="chip" style="background:#ECE8DF"></div><div class="info"><span class="name">sunk</span><span class="hex">#ECE8DF</span></div></div>
+        <div class="sw"><div class="chip" style="background:#D9D3C7"></div><div class="info"><span class="name">rule</span><span class="hex">#D9D3C7</span></div></div>
+        <div class="sw"><div class="chip" style="background:#1C1A17"></div><div class="info"><span class="name">ink</span><span class="hex">#1C1A17 · 15.66:1</span></div></div>
+        <div class="sw"><div class="chip" style="background:#5A554D"></div><div class="info"><span class="name">ink-2</span><span class="hex">#5A554D · 6.67:1</span></div></div>
+        <div class="sw"><div class="chip" style="background:#6B655C"></div><div class="info"><span class="name">ink-3</span><span class="hex">#6B655C · 5.20:1</span></div></div>
+        <div class="sw"><div class="chip" style="background:#2E5A45"></div><div class="info"><span class="name">accent</span><span class="hex">#2E5A45 · 7.11:1</span></div></div>
+        <div class="sw"><div class="chip" style="background:#DCE7DF"></div><div class="info"><span class="name">accent-soft</span><span class="hex">#DCE7DF</span></div></div>
+        <div class="sw"><div class="chip" style="background:#8A2E2B"></div><div class="info"><span class="name">miss</span><span class="hex">#8A2E2B · 7.56:1</span></div></div>
+        <div class="sw"><div class="chip" style="background:#8A5A12"></div><div class="info"><span class="name">note</span><span class="hex">#8A5A12 · 5.33:1</span></div></div>
+      </div>
+      <div class="demo-pairs" style="margin-top:16px">
+        <div style="background:var(--accent);color:var(--on-accent)">on-accent on accent · 7.11</div>
+        <div style="background:var(--accent-soft);color:var(--accent)">accent on accent-soft · 6.21</div>
+        <div style="background:var(--sunk);color:var(--ink-3)">ink-3 on sunk · 4.72</div>
+      </div>
+    </div>
+    <div class="theme-panel t-dark">
+      <h4>Dark · lamp-lit study</h4>
+      <div class="swatches">
+        <div class="sw"><div class="chip" style="background:#1F1B16"></div><div class="info"><span class="name">paper</span><span class="hex">#1F1B16</span></div></div>
+        <div class="sw"><div class="chip" style="background:#2A251F"></div><div class="info"><span class="name">surface</span><span class="hex">#2A251F</span></div></div>
+        <div class="sw"><div class="chip" style="background:#171411"></div><div class="info"><span class="name">sunk</span><span class="hex">#171411</span></div></div>
+        <div class="sw"><div class="chip" style="background:#3B342C"></div><div class="info"><span class="name">rule</span><span class="hex">#3B342C</span></div></div>
+        <div class="sw"><div class="chip" style="background:#ECE5D8"></div><div class="info"><span class="name">ink</span><span class="hex">#ECE5D8 · 13.67:1</span></div></div>
+        <div class="sw"><div class="chip" style="background:#B5AB9B"></div><div class="info"><span class="name">ink-2</span><span class="hex">#B5AB9B · 7.55:1</span></div></div>
+        <div class="sw"><div class="chip" style="background:#9A9182"></div><div class="info"><span class="name">ink-3</span><span class="hex">#9A9182 · 5.50:1</span></div></div>
+        <div class="sw"><div class="chip" style="background:#9FC6AB"></div><div class="info"><span class="name">accent</span><span class="hex">#9FC6AB · 9.08:1</span></div></div>
+        <div class="sw"><div class="chip" style="background:#2C3A31"></div><div class="info"><span class="name">accent-soft</span><span class="hex">#2C3A31</span></div></div>
+        <div class="sw"><div class="chip" style="background:#E4998F"></div><div class="info"><span class="name">miss</span><span class="hex">#E4998F · 7.54:1</span></div></div>
+        <div class="sw"><div class="chip" style="background:#E0B36A"></div><div class="info"><span class="name">note</span><span class="hex">#E0B36A · 8.83:1</span></div></div>
+      </div>
+      <div class="demo-pairs" style="margin-top:16px">
+        <div style="background:var(--accent);color:var(--on-accent)">on-accent on accent · 8.57</div>
+        <div style="background:var(--accent-soft);color:var(--accent)">accent on accent-soft · 6.34</div>
+        <div style="background:var(--sunk);color:var(--ink-3)">ink-3 on sunk · 5.89</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel tscroll" style="margin-top:24px">
+    <p class="label">WCAG 2.1 contrast, computed from the hex values above. Every text pair passes AA (4.5:1); most pass AAA (7:1). The hairline is decorative and is not held to a text ratio.</p>
+    <table class="ctable">
+      <thead><tr><th>Pair</th><th style="text-align:right">Light</th><th style="text-align:right">Dark</th><th>Level</th></tr></thead>
+      <tbody>
+        <tr><td>ink on paper</td><td class="n">15.66</td><td class="n">13.67</td><td class="pass">AAA</td></tr>
+        <tr><td>ink-2 on paper</td><td class="n">6.67</td><td class="n">7.55</td><td class="pass">AA / AAA</td></tr>
+        <tr><td>ink-3 on paper</td><td class="n">5.20</td><td class="n">5.50</td><td class="pass">AA</td></tr>
+        <tr><td>ink on surface</td><td class="n">16.63</td><td class="n">12.12</td><td class="pass">AAA</td></tr>
+        <tr><td>ink-2 on surface</td><td class="n">7.08</td><td class="n">6.70</td><td class="pass">AAA / AA</td></tr>
+        <tr><td>ink-3 on surface</td><td class="n">5.53</td><td class="n">4.88</td><td class="pass">AA</td></tr>
+        <tr><td>ink on sunk</td><td class="n">14.20</td><td class="n">14.65</td><td class="pass">AAA</td></tr>
+        <tr><td>ink-3 on sunk</td><td class="n">4.72</td><td class="n">5.89</td><td class="pass">AA</td></tr>
+        <tr><td>accent on paper</td><td class="n">7.11</td><td class="n">9.08</td><td class="pass">AAA</td></tr>
+        <tr><td>accent on surface</td><td class="n">7.55</td><td class="n">8.06</td><td class="pass">AAA</td></tr>
+        <tr><td>on-accent on accent (buttons)</td><td class="n">7.11</td><td class="n">8.57</td><td class="pass">AAA</td></tr>
+        <tr><td>accent on accent-soft (used rung)</td><td class="n">6.21</td><td class="n">6.34</td><td class="pass">AA</td></tr>
+        <tr><td>miss on paper</td><td class="n">7.56</td><td class="n">7.54</td><td class="pass">AAA</td></tr>
+        <tr><td>note on paper</td><td class="n">5.33</td><td class="n">8.83</td><td class="pass">AA / AAA</td></tr>
+        <tr><td>rule on paper (decorative)</td><td class="n">1.34</td><td class="n">1.40</td><td class="muted">n/a</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================ SPACE ============================ -->
+<section class="g" id="space">
+  <header>
+    <span class="eyebrow">04 · Space, radii, elevation</span>
+    <h2>A 4px base and small corners</h2>
+    <p>Space is the divider. Sections are separated by 32px, groups by 24px, a label and its control by 8px. Corners stay small because this is a book, not a bubble. Only a bottom sheet casts a shadow.</p>
+  </header>
+  <div class="grid grid-2">
+    <div class="panel">
+      <p class="label">Spacing scale</p>
+      <div class="space-row"><span class="k">sp-1 · 4</span><i class="bar" style="width:4px"></i><span class="muted">dot gaps</span></div>
+      <div class="space-row"><span class="k">sp-2 · 8</span><i class="bar" style="width:8px"></i><span class="muted">label to control</span></div>
+      <div class="space-row"><span class="k">sp-3 · 12</span><i class="bar" style="width:12px"></i><span class="muted">within a group</span></div>
+      <div class="space-row"><span class="k">sp-4 · 16</span><i class="bar" style="width:16px"></i><span class="muted">gutter minimum</span></div>
+      <div class="space-row"><span class="k">sp-5 · 24</span><i class="bar" style="width:24px"></i><span class="muted">between groups, verse gutter</span></div>
+      <div class="space-row"><span class="k">sp-6 · 32</span><i class="bar" style="width:32px"></i><span class="muted">above a section head</span></div>
+      <div class="space-row"><span class="k">sp-7 · 48</span><i class="bar" style="width:48px"></i><span class="muted">screen top</span></div>
+      <div class="space-row"><span class="k">sp-8 · 64</span><i class="bar" style="width:64px"></i><span class="muted">splash</span></div>
+    </div>
+    <div class="panel" style="display:grid;gap:24px;align-content:start">
+      <div>
+        <p class="label">Radii</p>
+        <div class="radii">
+          <div class="r" style="border-radius:3px">3 · chip</div>
+          <div class="r" style="border-radius:6px">6 · input</div>
+          <div class="r" style="border-radius:10px">10 · sheet</div>
+          <div class="r" style="border-radius:999px;width:96px;height:28px">pill · track</div>
+        </div>
+      </div>
+      <div>
+        <p class="label">Tap targets · 44px minimum, including tabs, rungs, rows</p>
+        <div style="display:flex;gap:12px;align-items:center">
+          <div style="width:44px;height:44px;border:1px dashed var(--accent);border-radius:6px;display:grid;place-items:center;font-size:11px;color:var(--accent)">44</div>
+          <div style="width:48px;height:48px;border:1px dashed var(--ink-3);border-radius:6px;display:grid;place-items:center;font-size:11px;color:var(--ink-3)">48</div>
+          <span class="meta">buttons and inputs are 48px tall</span>
+        </div>
+      </div>
+      <div>
+        <p class="label">Elevation · the only shadow</p>
+        <div class="demo-sheet"><div class="sheet"><div class="handle"></div><div class="sh"><b>Translation</b><span>sheet, 320ms</span></div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ COMPONENTS ============================ -->
+<section class="g" id="components">
+  <header>
+    <span class="eyebrow">05 · Components</span>
+    <h2>Few parts, clearly stated</h2>
+    <p>Typography does the hierarchy. A border appears only on inputs, the one verse card, and a sheet. Every interactive element looks like one.</p>
+  </header>
+
+  <div class="grid grid-2">
+    <div class="panel" style="display:grid;gap:16px;align-content:start">
+      <p class="label">Buttons · 48px · 6px radius · Instrument Sans 600</p>
+      <div style="display:flex;flex-wrap:wrap;gap:12px">
+        <button class="btn btn-primary">Practice</button>
+        <button class="btn btn-secondary">Later today</button>
+        <button class="btn btn-quiet">Skip for today</button>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:12px">
+        <button class="btn btn-disabled">Save to Verses</button>
+        <button class="btn btn-danger">Remove verse</button>
+        <button class="btn btn-primary" style="outline:2px solid var(--accent);outline-offset:2px">Focused</button>
+      </div>
+      <p class="meta">Press darkens the fill 8% in 120ms. Disabled uses sunk/ink-3, never opacity. Focus is a 2px accent ring with 2px offset.</p>
+    </div>
+
+    <div class="panel" style="display:grid;gap:20px;align-content:start">
+      <p class="label">Text input, focus, error</p>
+      <div class="field"><label for="f1">Reference</label><input class="input" id="f1" value="Psalm 46:1"></div>
+      <div class="field"><label for="f2">Reference</label><input class="input is-focus" id="f2" value="Philippians 4:6" aria-label="Reference, focused state"></div>
+      <div class="field"><label for="f3">Reference</label><input class="input is-error" id="f3" value="Phil 4"><span class="err">Use the full book name and a verse, like Philippians 4:6.</span></div>
+    </div>
+
+    <div class="panel" style="display:grid;gap:16px;align-content:start">
+      <p class="label">Translation picker · pills · one selected</p>
+      <div class="pills"><button class="pill on">ESV</button><button class="pill">NIV</button><button class="pill">KJV</button><button class="pill">NASB</button><button class="pill">NLT</button><button class="pill">CSB</button></div>
+      <p class="label" style="margin-top:8px">Verse textarea · Newsreader 19px so you see it as you'll read it</p>
+      <div class="field"><label for="f4">Verse text</label><textarea class="input textarea" id="f4" rows="3">God is our refuge and strength, a very present help in trouble.</textarea></div>
+    </div>
+
+    <div class="panel" style="display:grid;gap:16px;align-content:start">
+      <p class="label">Verse card · the one bordered card on Today</p>
+      <div class="verse-card">
+        <div>
+          <p class="verse">Peace I leave with you, my peace I give unto you: not as the world giveth, give I unto you. Let not your heart be troubled, neither let it be afraid.</p>
+          <p class="ref">John 14:27 · KJV</p>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+          <div style="display:flex;align-items:center;gap:10px"><span class="dots"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span><span class="meta">learning</span></div>
+          <button class="btn btn-primary">Practice</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" style="display:grid;gap:24px;align-content:start">
+      <div class="progress">
+        <p class="label">Progress · 4px track · a count, not a percentage</p>
+        <div class="row"><span>Today's review</span><span class="tnum">3 of 7</span></div>
+        <div class="track"><i style="width:43%"></i></div>
+      </div>
+      <div>
+        <p class="label">Mastery dots · learning → kept</p>
+        <div style="display:grid;gap:10px;font-size:14px">
+          <div style="display:flex;gap:12px;align-items:center"><span class="dots"><i class="on"></i><i></i><i></i><i></i><i></i></span><span class="muted">new</span></div>
+          <div style="display:flex;gap:12px;align-items:center"><span class="dots"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span><span class="muted">learning</span></div>
+          <div style="display:flex;gap:12px;align-items:center"><span class="dots"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span><span class="muted">kept</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" style="display:grid;gap:12px;align-content:start">
+      <p class="label">Hint ladder · four rungs · 44px each · used, next, later</p>
+      <div class="ladder">
+        <div class="rung used"><span class="n">1</span>Show the first letters<svg class="ic sm"><use href="#i-check"/></svg></div>
+        <div class="rung used"><span class="n">2</span>Show how each line begins<svg class="ic sm"><use href="#i-check"/></svg></div>
+        <div class="rung next"><span class="n">3</span>Show every other word<svg class="ic sm"><use href="#i-chev-r"/></svg></div>
+        <div class="rung"><span class="n">4</span>Show the whole verse, then try again</div>
+      </div>
+      <p class="meta">A used rung costs nothing visible. The logbook records "needed hints" quietly.</p>
+    </div>
+
+    <div class="panel" style="display:grid;gap:4px;align-content:start">
+      <p class="label">Logbook rows · full-bleed hairlines · 56px</p>
+      <div class="logrow"><span class="r">Psalm 46:1</span><span class="res"><svg class="ic sm"><use href="#i-keyboard"/></svg>Word-perfect</span><span class="d">Today</span></div>
+      <div class="logrow"><span class="r">John 14:27</span><span class="res"><svg class="ic sm"><use href="#i-mic"/></svg>2 slips</span><span class="d">Today</span></div>
+      <div class="logrow"><span class="r">Romans 8:28</span><span class="res"><svg class="ic sm"><use href="#i-buoy"/></svg>Needed hints</span><span class="d">Sat 1 Nov</span></div>
+      <div class="logrow"><span class="r">Isaiah 40:31</span><span class="res"><svg class="ic sm"><use href="#i-help"/></svg>Quiz · right</span><span class="d">Fri 31 Oct</span></div>
+    </div>
+
+    <div class="panel" style="display:grid;gap:12px;align-content:start">
+      <p class="label">Quiz card · timer bar in amber only when timed</p>
+      <div class="quiz-card">
+        <i class="timer"></i>
+        <span class="eyebrow">Pop quiz</span>
+        <p class="q">Romans 8:28</p>
+        <div style="display:grid;gap:10px">
+          <button class="btn btn-primary"><svg class="ic md"><use href="#i-mic"/></svg>Say it</button>
+          <button class="btn btn-secondary"><svg class="ic md"><use href="#i-keyboard"/></svg>Type it</button>
+          <button class="btn btn-quiet">Not now</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ SCREENS ============================ -->
+<section class="g" id="screens">
+  <header>
+    <span class="eyebrow">06 · Screens</span>
+    <h2>Six screens at 390 × 844</h2>
+    <p>Drawn in HTML and CSS from the tokens above. Each opens with content, not chrome. The tab bar (Today, Verses, Quiz, Logbook) is 56px plus the home indicator, with 44px targets. Frames follow your system theme; the last two are pinned to the opposite theme so both are always visible.</p>
+  </header>
+
+  <div class="phones">
+
+    <!-- TODAY -->
+    <div class="phone" aria-label="Today screen">
+      <div class="status"><span>9:41</span><span class="cell"><i></i></span></div>
+      <div class="screen">
+        <div class="head" style="display:flex;justify-content:space-between;align-items:flex-end">
+          <div><span class="eyebrow">Sunday · 2 November</span><div class="title">Today</div></div>
+          <span class="wordmark sz-tab" style="padding-bottom:6px"><i class="mark"></i>Kept</span>
+        </div>
+        <div class="verse-card">
+          <div>
+            <p class="verse">Peace I leave with you, my peace I give unto you: not as the world giveth, give I unto you. Let not your heart be troubled, neither let it be afraid.</p>
+            <p class="ref">John 14:27 · KJV</p>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+            <div style="display:flex;align-items:center;gap:10px"><span class="dots"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span><span class="meta">learning</span></div>
+            <button class="btn btn-primary">Practice</button>
+          </div>
+        </div>
+        <div>
+          <div class="section-h" style="margin-bottom:8px">Also due</div>
+          <div class="due">
+            <div class="row"><span>Psalm 46:1</span><span class="m">kept · quick review</span></div>
+            <div class="row"><span>Romans 8:28</span><span class="m">learning</span></div>
+            <div class="row"><span>Isaiah 40:31</span><span class="m">new</span></div>
+          </div>
+        </div>
+        <p class="summary tnum">Seven days in a row. Three verses kept, four in progress.</p>
+      </div>
+      <div class="tabbar">
+        <div class="tab on"><svg class="ic"><use href="#i-sun"/></svg>Today</div>
+        <div class="tab"><svg class="ic"><use href="#i-book"/></svg>Verses</div>
+        <div class="tab"><svg class="ic"><use href="#i-help"/></svg>Quiz</div>
+        <div class="tab"><svg class="ic"><use href="#i-list"/></svg>Logbook</div>
+      </div>
+    </div>
+
+    <!-- ADD VERSE -->
+    <div class="phone" aria-label="Add verse screen">
+      <div class="status"><span>9:41</span><span class="cell"><i></i></span></div>
+      <div class="screen" style="gap:20px">
+        <div class="topnav"><span class="back"><svg class="ic"><use href="#i-chev-l"/></svg></span>Verses</div>
+        <div class="title" style="margin-top:-12px">Add a verse</div>
+        <div class="field"><label for="m-ref">Reference</label><input class="input" id="m-ref" value="Philippians 4:6"></div>
+        <div class="field">
+          <label>Translation</label>
+          <div class="pills"><span class="pill on">ESV</span><span class="pill">NIV</span><span class="pill">KJV</span><span class="pill">NASB</span><span class="pill">NLT</span><span class="pill">CSB</span></div>
+        </div>
+        <div class="field"><label for="m-text">Verse text</label><textarea class="input textarea" id="m-text" rows="5">Do not be anxious about anything, but in everything by prayer and supplication with thanksgiving let your requests be made known to God.</textarea></div>
+        <p class="meta">Paste the text as printed. Punctuation counts when you type it back.</p>
+        <button class="btn btn-primary block">Save to Verses</button>
+      </div>
+      <div class="tabbar">
+        <div class="tab"><svg class="ic"><use href="#i-sun"/></svg>Today</div>
+        <div class="tab on"><svg class="ic"><use href="#i-book"/></svg>Verses</div>
+        <div class="tab"><svg class="ic"><use href="#i-help"/></svg>Quiz</div>
+        <div class="tab"><svg class="ic"><use href="#i-list"/></svg>Logbook</div>
+      </div>
+    </div>
+
+    <!-- PRACTICE TYPING -->
+    <div class="phone" aria-label="Practice by typing screen">
+      <div class="status"><span>9:41</span><span class="cell"><i></i></span></div>
+      <div class="screen" style="gap:16px">
+        <div class="topnav" style="justify-content:space-between"><span style="display:flex;align-items:center;gap:4px"><span class="back"><svg class="ic"><use href="#i-chev-l"/></svg></span>Today</span><span class="meta" style="display:flex;align-items:center;gap:6px"><svg class="ic sm"><use href="#i-keyboard"/></svg>Typing</span></div>
+        <div>
+          <span class="eyebrow">Psalm 46:1 · KJV</span>
+          <div class="progress" style="margin-top:12px"><div class="track"><i style="width:36%"></i></div></div>
+        </div>
+        <div class="words">
+          <span class="done">God</span><span class="done">is</span><span class="done">our</span><span class="done">refuge</span><span class="cur">and</span><span class="empty">strength,</span><span class="empty">a</span><span class="empty">very</span><span class="empty">present</span><span class="empty">help</span><span class="empty">in</span><span class="empty">trouble.</span>
+        </div>
+        <p class="meta">One word at a time. A slip shows in <span style="color:var(--miss)">oxblood</span> for a moment, then the right word takes its place.</p>
+        <div style="flex:1"></div>
+        <div class="above-kbd">
+          <button class="btn btn-quiet" style="gap:6px"><svg class="ic md"><use href="#i-buoy"/></svg>Hint</button>
+          <input class="input is-focus" style="flex:1;height:44px" value="an" aria-label="Type the next word">
+        </div>
+        <div class="kbd">
+          <div class="r"><b>q</b><b>w</b><b>e</b><b>r</b><b>t</b><b>y</b><b>u</b><b>i</b><b>o</b><b>p</b></div>
+          <div class="r"><b>a</b><b>s</b><b>d</b><b>f</b><b>g</b><b>h</b><b>j</b><b>k</b><b>l</b></div>
+          <div class="r"><b class="w">shift</b><b>z</b><b>x</b><b>c</b><b>v</b><b>b</b><b>n</b><b>m</b><b class="w">del</b></div>
+          <div class="r"><b class="w">123</b><b class="sp">space</b><b class="w">return</b></div>
+          <div style="height:22px"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRACTICE SPEAK + HINT -->
+    <div class="phone" aria-label="Practice by speaking screen with hint panel open">
+      <div class="status"><span>9:41</span><span class="cell"><i></i></span></div>
+      <div class="screen" style="gap:20px">
+        <div class="topnav" style="justify-content:space-between"><span style="display:flex;align-items:center;gap:4px"><span class="back"><svg class="ic"><use href="#i-chev-l"/></svg></span>Today</span><span class="meta" style="display:flex;align-items:center;gap:6px"><svg class="ic sm"><use href="#i-mic"/></svg>Speaking</span></div>
+        <span class="eyebrow">Romans 8:28 · KJV</span>
+        <p class="transcript">And we know that all things work together for good to them that love God, <span class="pending">to them who are the called…</span></p>
+        <div class="mic-wrap" style="margin-top:8px">
+          <div class="mic"><svg class="ic"><use href="#i-mic"/></svg></div>
+          <span class="meta">Listening. Tap to pause.</span>
+        </div>
+      </div>
+      <div class="tabbar">
+        <div class="tab on"><svg class="ic"><use href="#i-sun"/></svg>Today</div>
+        <div class="tab"><svg class="ic"><use href="#i-book"/></svg>Verses</div>
+        <div class="tab"><svg class="ic"><use href="#i-help"/></svg>Quiz</div>
+        <div class="tab"><svg class="ic"><use href="#i-list"/></svg>Logbook</div>
+      </div>
+      <div class="scrim"></div>
+      <div class="sheet">
+        <div class="handle"></div>
+        <div class="sh"><b>A hint</b><span>Romans 8:28</span></div>
+        <p class="hinted" style="letter-spacing:.08em"><b>A w k t a t w t f g t t t l G,</b> <b>t t w a t c a t h p.</b></p>
+        <div class="ladder">
+          <div class="rung used"><span class="n">1</span>Show the first letters<svg class="ic sm"><use href="#i-check"/></svg></div>
+          <div class="rung next"><span class="n">2</span>Show how each line begins<svg class="ic sm"><use href="#i-chev-r"/></svg></div>
+          <div class="rung"><span class="n">3</span>Show every other word</div>
+          <div class="rung"><span class="n">4</span>Show the whole verse, then try again</div>
+        </div>
+        <button class="btn btn-secondary block">Back to reciting</button>
+      </div>
+    </div>
+
+    <!-- LOGBOOK (pinned to dark) -->
+    <div class="phone t-dark" aria-label="Logbook screen, dark theme">
+      <div class="status"><span>9:41</span><span class="cell"><i></i></span></div>
+      <div class="screen" style="gap:12px">
+        <div class="head"><span class="eyebrow">November 2026</span><div class="title">Logbook</div></div>
+        <p class="summary tnum">31 sessions this month · 12 verses kept · longest run 9 days</p>
+        <div class="month">
+          <div class="day">Sunday 2</div>
+          <div class="logrow"><span class="r">Psalm 46:1</span><span class="res"><svg class="ic sm"><use href="#i-keyboard"/></svg>Word-perfect</span><span class="d">09:40</span></div>
+          <div class="logrow"><span class="r">John 14:27</span><span class="res"><svg class="ic sm"><use href="#i-mic"/></svg>2 slips</span><span class="d">09:35</span></div>
+          <div class="day">Saturday 1</div>
+          <div class="logrow"><span class="r">Romans 8:28</span><span class="res"><svg class="ic sm"><use href="#i-buoy"/></svg>Needed hints</span><span class="d">21:12</span></div>
+          <div class="logrow"><span class="r">Isaiah 40:31</span><span class="res"><svg class="ic sm"><use href="#i-help"/></svg>Quiz · right</span><span class="d">13:04</span></div>
+          <div class="logrow"><span class="r">Psalm 119:11</span><span class="res"><svg class="ic sm"><use href="#i-keyboard"/></svg>Word-perfect</span><span class="d">07:52</span></div>
+          <div class="day">Friday 31 Oct</div>
+          <div class="logrow"><span class="r">Philippians 4:6</span><span class="res"><svg class="ic sm"><use href="#i-mic"/></svg>1 slip</span><span class="d">22:30</span></div>
+          <div class="logrow"><span class="r">John 14:27</span><span class="res"><svg class="ic sm"><use href="#i-help"/></svg>Quiz · not yet</span><span class="d">12:15</span></div>
+        </div>
+      </div>
+      <div class="tabbar">
+        <div class="tab"><svg class="ic"><use href="#i-sun"/></svg>Today</div>
+        <div class="tab"><svg class="ic"><use href="#i-book"/></svg>Verses</div>
+        <div class="tab"><svg class="ic"><use href="#i-help"/></svg>Quiz</div>
+        <div class="tab on"><svg class="ic"><use href="#i-list"/></svg>Logbook</div>
+      </div>
+    </div>
+
+    <!-- POP QUIZ (pinned to light) -->
+    <div class="phone t-light" aria-label="Pop quiz screen, light theme">
+      <div class="status"><span>9:41</span><span class="cell"><i></i></span></div>
+      <div class="screen">
+        <div class="head"><span class="eyebrow">Pop quiz · 1 of 3</span><div class="title">Quiz</div></div>
+        <div class="quiz-screen">
+          <div style="display:grid;gap:12px;justify-items:center">
+            <span class="meta">From memory, recite</span>
+            <div class="qref">Isaiah 40:31</div>
+            <span class="dots"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span>
+          </div>
+          <div class="cta">
+            <button class="btn btn-primary"><svg class="ic md"><use href="#i-mic"/></svg>Say it</button>
+            <button class="btn btn-secondary"><svg class="ic md"><use href="#i-keyboard"/></svg>Type it</button>
+            <button class="btn btn-quiet">Not now</button>
+          </div>
+        </div>
+      </div>
+      <div class="tabbar">
+        <div class="tab"><svg class="ic"><use href="#i-sun"/></svg>Today</div>
+        <div class="tab"><svg class="ic"><use href="#i-book"/></svg>Verses</div>
+        <div class="tab on"><svg class="ic"><use href="#i-help"/></svg>Quiz</div>
+        <div class="tab"><svg class="ic"><use href="#i-list"/></svg>Logbook</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============================ VOICE ============================ -->
+<section class="g" id="voice">
+  <header>
+    <span class="eyebrow">07 · Voice &amp; tone</span>
+    <h2>Encouraging, unhurried, never cutesy</h2>
+    <p>Second person, present tense, plain words. No exclamation marks outside a quoted verse. No emoji. Scripture is quoted exactly and attributed. Say what a thoughtful person would say out loud.</p>
+  </header>
+  <div class="col voice">
+    <div class="row"><span class="k">Empty · Verses</span><span class="v">Nothing here yet. Add a verse you want to keep.</span></div>
+    <div class="row"><span class="k">Empty · Logbook</span><span class="v">Your practice will be recorded here, one session at a time.</span></div>
+    <div class="row"><span class="k">Empty · Today</span><span class="v">Nothing is due today. Add a verse, or review one you already keep.</span></div>
+    <div class="row"><span class="k">Hint · rung 1</span><span class="v">Show the first letters.</span></div>
+    <div class="row"><span class="k">Hint · rung 4</span><span class="v">Show the whole verse. Then try again.</span></div>
+    <div class="row"><span class="k">After a slip</span><span class="v">Close. The word is <em>strength</em>.</span></div>
+    <div class="row"><span class="k">Word-perfect</span><span class="v">Kept. It will come round again on Thursday.</span></div>
+    <div class="row"><span class="k">Needed hints</span><span class="v">You needed two hints. That's how it goes in. Again tomorrow.</span></div>
+    <div class="row"><span class="k">Quiz · right</span><span class="v">Right. Psalm 46:1 is yours.</span></div>
+    <div class="row"><span class="k">Quiz · miss</span><span class="v">Not yet. Read it once more, then we'll try again later today.</span></div>
+    <div class="row"><span class="k">Streak · day 1</span><span class="v">First day.</span></div>
+    <div class="row"><span class="k">Streak · ongoing</span><span class="v">Seven days in a row.</span></div>
+    <div class="row"><span class="k">Streak · broken</span><span class="v">A gap. Nothing is lost; the verses are still here.</span></div>
+    <div class="row"><span class="k">Mic permission</span><span class="v">Kept needs the microphone to hear you recite. Nothing is recorded or sent anywhere.</span></div>
+    <div class="row"><span class="k">Delete confirm</span><span class="v">Remove Romans 8:28 from your verses? Your logbook keeps its history.</span></div>
+  </div>
+</section>
+
+<!-- ============================ ICONS ============================ -->
+<section class="g" id="icons">
+  <header>
+    <span class="eyebrow">08 · Iconography</span>
+    <h2>Lucide, 1.5px, nothing filled</h2>
+    <p>One set, one weight. Lucide at 24px with a 1.5px stroke; 1.75px at 16–20px so small icons do not thin out. Round caps and joins. Icons are ink-3 at rest, ink when active, accent only for the active tab and the listening mic. No emoji, no sparkle, no fills. The ribbon is a brand mark, never a tab icon.</p>
+  </header>
+  <div class="panel">
+    <div class="iconrow">
+      <div><svg class="ic"><use href="#i-sun"/></svg>sun · Today</div>
+      <div><svg class="ic"><use href="#i-book"/></svg>book-open</div>
+      <div><svg class="ic"><use href="#i-help"/></svg>help-circle</div>
+      <div><svg class="ic"><use href="#i-list"/></svg>list</div>
+      <div><svg class="ic"><use href="#i-keyboard"/></svg>keyboard</div>
+      <div><svg class="ic"><use href="#i-mic"/></svg>mic</div>
+      <div><svg class="ic"><use href="#i-eye"/></svg>eye · reveal</div>
+      <div><svg class="ic"><use href="#i-buoy"/></svg>life-buoy · hint</div>
+      <div><svg class="ic"><use href="#i-check"/></svg>check</div>
+      <div><svg class="ic"><use href="#i-minus"/></svg>minus · slips</div>
+      <div><svg class="ic"><use href="#i-plus"/></svg>plus</div>
+      <div><svg class="ic"><use href="#i-chev-l"/></svg>chevron</div>
+      <div><svg class="ic"><use href="#i-x"/></svg>x · close</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ MOTION ============================ -->
+<section class="g" id="motion">
+  <header>
+    <span class="eyebrow">09 · Motion</span>
+    <h2>Three durations, one easing, and a short list of what never moves</h2>
+  </header>
+  <div class="grid grid-2">
+    <div class="panel motion">
+      <p class="label">Durations · easing <code>cubic-bezier(.2,.7,.2,1)</code> entering, <code>cubic-bezier(.45,0,.2,1)</code> leaving</p>
+      <div class="row"><span class="k">120ms</span><span>Press, toggle, hover. A button darkening, a pill selecting.</span></div>
+      <div class="row"><span class="k">200ms</span><span>A typed word settling into place, a rung becoming active, a fade.</span></div>
+      <div class="row"><span class="k">320ms</span><span>A sheet sliding up, a screen change, the progress fill growing.</span></div>
+      <div class="row"><span class="k">1.6s</span><span>The one ambient motion: the mic ring breathing (opacity .25 → .7) while listening.</span></div>
+    </div>
+    <div class="panel dodont" style="grid-template-columns:1fr">
+      <div>
+        <p class="label">Never animates</p>
+        <ul class="dont">
+          <li>Scripture text. No typewriter, no word-by-word fade on Today.</li>
+          <li>The tab bar and the wordmark.</li>
+          <li>Streak and score numbers. No count-up.</li>
+          <li>Confetti, particles, sparkles, trophies.</li>
+          <li>The page background on theme change.</li>
+        </ul>
+        <p class="meta" style="margin-top:16px"><code>prefers-reduced-motion</code> sets every duration to 0 and stops the mic pulse. The app is complete with no motion at all.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ RULES ============================ -->
+<section class="g" id="rules">
+  <header>
+    <span class="eyebrow">10 · Do / Don't</span>
+    <h2>The rules that keep it from looking generated</h2>
+  </header>
+  <div class="dodont">
+    <div class="panel">
+      <p class="label">Do</p>
+      <ul class="do">
+        <li>Set scripture in Newsreader at 19px, line-height 1.6, no more than 65 characters a line.</li>
+        <li>Let whitespace separate sections; hairlines only between list rows.</li>
+        <li>Keep one accent and use it for actions and progress only.</li>
+        <li>Use real references and real verse text in every example and empty state.</li>
+        <li>Keep every tap target at 44px or larger.</li>
+        <li>Make the dark theme warm.</li>
+        <li>Write copy a thoughtful person would say out loud.</li>
+      </ul>
+    </div>
+    <div class="panel">
+      <p class="label">Don't</p>
+      <ul class="dont">
+        <li>Don't use Inter, Roboto, system-ui or Space Grotesk as a primary face.</li>
+        <li>Don't use gradients, glass blur, lavender or indigo, or a second accent hue.</li>
+        <li>Don't stack rounded cards with shadows; one bordered verse card per screen at most.</li>
+        <li>Don't use emoji or sparkle icons anywhere.</li>
+        <li>Don't center or justify verse text.</li>
+        <li>Don't animate scripture, numbers, or the tab bar.</li>
+        <li>Don't add badges, trophies or fire. Don't write "Great job!" or "Oops".</li>
+        <li>Don't show a percentage when "3 of 7" says it better.</li>
+        <li>Don't use pure black or pure white as a page ground.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+</div>
+</body>
+</html>

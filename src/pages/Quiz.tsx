@@ -7,7 +7,7 @@ import Header from '../components/Header'
 
 type Q =
   | { kind: 'ref'; verse: Verse; options: string[]; answer: string }
-  | { kind: 'blank'; verse: Verse; blankIndex: number; options: string[]; answer: string }
+  | { kind: 'blank'; verse: Verse; blankIndex: number; answer: string }
 
 function shuffle<T>(a: T[]): T[] { const b = [...a]; for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]] } return b }
 function pick<T>(a: T[]): T { return a[Math.floor(Math.random() * a.length)] }
@@ -23,9 +23,7 @@ function makeQuestions(verses: Verse[], n = 8): Q[] {
     } else {
       const candidates = verse.words.map((w, i) => [w, i] as const).filter(([w]) => normalizeWord(w).length >= 4)
       const [answer, blankIndex] = candidates.length ? pick(candidates) : [verse.words[0], 0]
-      const pool = verses.flatMap(v => v.words).filter(w => normalizeWord(w).length >= 4 && normalizeWord(w) !== normalizeWord(answer))
-      const distractors = shuffle([...new Set(pool.map(w => w.replace(/[^\w']/g, '')))]).slice(0, 3)
-      qs.push({ kind: 'blank', verse, blankIndex, options: shuffle([answer.replace(/[^\w']/g, ''), ...distractors]), answer: answer.replace(/[^\w']/g, '') })
+      qs.push({ kind: 'blank', verse, blankIndex, answer })
     }
   }
   return qs
@@ -37,6 +35,7 @@ export default function Quiz() {
   const [i, setI] = useState(0)
   const [score, setScore] = useState(0)
   const [chosen, setChosen] = useState<string | null>(null)
+  const [typed, setTyped] = useState('')
   const qs = useMemo(() => (verses?.length ? makeQuestions(verses) : []), [verses, seed])
 
   if (!verses) return null
@@ -54,8 +53,8 @@ export default function Quiz() {
   function answer(opt: string) {
     if (chosen) return
     setChosen(opt)
-    if (opt === q.answer) setScore(s => s + 1)
-    setTimeout(() => { setChosen(null); setI(n => n + 1) }, 900)
+    if (normalizeWord(opt) === normalizeWord(q.answer)) setScore(s => s + 1)
+    setTimeout(() => { setChosen(null); setTyped(''); setI(n => n + 1) }, 900)
   }
   return (
     <>
@@ -69,11 +68,21 @@ export default function Quiz() {
         </blockquote>
       )}
       <p className="muted">{q.kind === 'ref' ? 'Where is this from?' : `Fill the blank · ${q.verse.reference}`}</p>
-      <div className="options">
-        {q.options.map(o => (
-          <button key={o} className={'button option' + (chosen ? (o === q.answer ? ' right' : o === chosen ? ' wrong' : '') : '')} onClick={() => answer(o)}>{o}</button>
-        ))}
-      </div>
+      {q.kind === 'ref' ? (
+        <div className="options">
+          {q.options.map(o => (
+            <button key={o} className={'button option' + (chosen ? (o === q.answer ? ' right' : o === chosen ? ' wrong' : '') : '')} onClick={() => answer(o)}>{o}</button>
+          ))}
+        </div>
+      ) : (
+        <form className="form" onSubmit={e => { e.preventDefault(); if (typed.trim()) answer(typed) }}>
+          <label className="field"><span>The missing word</span>
+            <input value={typed} onChange={e => setTyped(e.target.value)} autoFocus autoCapitalize="none" autoCorrect="off" disabled={!!chosen} />
+          </label>
+          {chosen && <p className={normalizeWord(chosen) === normalizeWord(q.answer) ? 'muted' : 'error'}>{normalizeWord(chosen) === normalizeWord(q.answer) ? 'Right.' : `It was “${q.answer.replace(/[^\w']/g, '')}”.`}</p>}
+          <button className="button primary" disabled={!typed.trim() || !!chosen}>Answer</button>
+        </form>
+      )}
     </>
   )
 }

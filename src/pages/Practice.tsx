@@ -5,7 +5,7 @@ import { db } from '../lib/db'
 import { tokenize, wordDiff, normalizeWord, type DiffOp } from '../lib/text'
 import { hintText } from '../lib/hints'
 import { gradeFromAccuracy, newReviewState, review } from '../lib/srs'
-import { speechSupported, startListening } from '../lib/speech'
+import { speechMethod, startListening, startRecording } from '../lib/speech'
 import type { Mode, Verse } from '../lib/types'
 import Header from '../components/Header'
 import VerseText from '../components/VerseText'
@@ -81,7 +81,7 @@ function ReadMode({ verse }: { verse: Verse }) {
   useEffect(() => { return () => { recordAttempt(verse, 'read', 1, 0, started.current) } }, [verse])
   return (
     <section>
-      <VerseText text={verse.text} reference={`${verse.reference} (${verse.translation.toUpperCase()})`} />
+      <VerseText text={verse.text} reference={`${verse.reference} (${(verse.translationLabel ?? verse.translation.toUpperCase())})`} />
       {verse.chunks && (
         <ol className="chunks">
           {verse.chunks.map((c, i) => <li key={i}><strong>{c.keyword}</strong> — {c.gist}</li>)}
@@ -152,38 +152,46 @@ function TypeMode({ verse }: { verse: Verse }) {
 }
 
 function SpeakMode({ verse }: { verse: Verse }) {
+  const method = useMemo(() => speechMethod(), [])
   const [listening, setListening] = useState(false)
+  const [transcribing, setTranscribing] = useState(false)
   const [transcript, setTranscript] = useState('')
   const [error, setError] = useState('')
   const [hints, setHints] = useState(0)
   const [result, setResult] = useState<{ accuracy: number; ops: DiffOp[] } | null>(null)
-  const stopRef = useRef<() => void>(() => {})
+  const stopRef = useRef<() => void | Promise<void>>(() => {})
   const started = useRef(Date.now())
   const at = Math.min(tokenize(transcript).length, verse.words.length - 1)
 
-  function toggle() {
-    if (listening) { stopRef.current(); return }
+  async function toggle() {
+    if (listening) { await stopRef.current(); return }
     setError(''); setTranscript(''); setListening(true)
-    stopRef.current = startListening(
-      (t) => setTranscript(t),
-      () => setListening(false),
-      (msg) => { setError(msg); setListening(false) },
-    )
+    if (method === 'webspeech') {
+      stopRef.current = startListening(t => setTranscript(t), () => setListening(false), msg => { setError(msg); setListening(false) })
+    } else {
+      const stop = await startRecording(msg => { setError(msg); setListening(false) })
+      stopRef.current = async () => {
+        setListening(false); setTranscribing(true)
+        try { setTranscript(await stop()) } finally { setTranscribing(false) }
+      }
+    }
   }
   function check() {
     const r = wordDiff(verse.words, tokenize(transcript))
     setResult(r)
     recordAttempt(verse, 'speak', r.accuracy, hints, started.current)
   }
-  if (!speechSupported()) return <p className="lede">Speech recognition isn't available in this browser. On iPhone, open the app in Safari; on Android, use Chrome.</p>
+  if (method === 'none') return <p className="lede">Speaking practice needs a microphone and a modern browser. Try Safari on iPhone or Chrome on Android.</p>
   if (result) return <Result accuracy={result.accuracy} ops={result.ops} onAgain={() => { setResult(null); setTranscript(''); setHints(0); started.current = Date.now() }} />
   return (
     <section>
-      <button className={'button mic' + (listening ? ' live' : '')} onClick={toggle}>{listening ? 'Stop' : 'Start speaking'}</button>
-      <p className="transcript">{transcript || <span className="muted">Say the verse aloud. Your words appear here.</span>}</p>
+      <button className={'button mic' + (listening ? ' live' : '')} onClick={toggle} disabled={transcribing}>
+        {listening ? 'Stop' : transcribing ? 'Transcribing…' : 'Start speaking'}
+      </button>
+      <p className="transcript">{transcript || <span className="muted">{listening ? 'Listening…' : 'Say the verse aloud, then tap Stop.'}</span>}</p>
       {error && <p className="error">{error}</p>}
       <HintPanel verse={verse} at={at} onUse={() => setHints(h => h + 1)} />
-      <button className="button primary" onClick={check} disabled={!transcript.trim() || listening}>Check</button>
+      <button className="button primary" onClick={check} disabled={!transcript.trim() || listening || transcribing}>Check</button>
     </section>
   )
 }

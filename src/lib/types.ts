@@ -1,11 +1,11 @@
-export type TranslationId = 'web' | 'kjv' | 'asv' | 'bbe' | 'darby' | 'ylt' | 'esv'
+export type TranslationId = 'web' | 'kjv' | 'asv' | 'bbe' | 'darby' | 'ylt' | 'esv' | 'custom'
 
 export interface Translation {
   id: TranslationId
   name: string
   abbr: string
   /** 'direct' = browser calls the public API; 'proxy' = goes through /api (needs a key) */
-  source: 'direct' | 'proxy'
+  source: 'direct' | 'proxy' | 'manual'
   attribution: string
 }
 
@@ -18,6 +18,7 @@ export interface Verse {
   verseStart: number
   verseEnd: number
   translation: TranslationId
+  translationLabel?: string   // e.g. "NIV" when translation === 'custom'
   text: string               // plain text, verse numbers stripped
   words: string[]            // tokenized text (display tokens, punctuation kept)
   chunks?: ThoughtChunk[]    // LLM-generated hint structure (optional until fetched)
