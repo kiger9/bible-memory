@@ -1,7 +1,7 @@
 // Vercel serverless function: fetches licensed translations server-side.
-//   GET /api/passage?ref=John%203:16-17&translation=nasb|esv|lsb&book=JHN&bn=43&ch=3&vs=16&ve=17
+//   GET /api/passage?ref=John%203:16-17&translation=nasb|esv|lsb|niv|kjv&book=JHN&bn=43&ch=3&vs=16&ve=17
 //   (book = USFM book id, bn = 1-based book number Genesis..Revelation, ch/vs/ve = chapter and verse range; the browser parses the reference)
-// NASB: API.Bible (scripture.api.bible) with API_BIBLE_KEY; the NASB must be enabled on that key.
+// NASB, NIV, KJV: API.Bible (scripture.api.bible) with API_BIBLE_KEY; each Bible must be enabled on that key.
 // ESV: official api.esv.org when ESV_API_KEY is set; otherwise the public reader page at
 //      www.esv.org (interim, until the Crossway key arrives).
 // LSB: the Next.js data route behind read.lsbible.org (unofficial; personal use).
@@ -32,37 +32,52 @@ export default async function handler(req: Req, res: Res) {
 export async function fetchProxied(p: RefParams, translation: string): Promise<Passage | null> {
   if (translation === 'esv') return process.env.ESV_API_KEY ? fetchEsvApi(p.ref, process.env.ESV_API_KEY) : fetchEsvSite(p)
   if (translation === 'lsb') return fetchLsb(p.ref)
-  if (translation === 'nasb') return fetchNasb(p)
+  const ab = API_BIBLES[translation]
+  if (ab) return fetchApiBible(p, translation, ab)
   return null
 }
 
-/* ---------------- NASB (API.Bible) ----------------
-   The NASB is licensed to API.Bible by The Lockman Foundation. Needs API_BIBLE_KEY, with the NASB
-   enabled on that key (some Bibles need the publisher's approval in the api.bible dashboard). */
+/* ---------------- API.Bible (NASB, NIV, KJV) ----------------
+   Licensed texts via scripture.api.bible. Needs API_BIBLE_KEY, with each Bible enabled on that key
+   (NASB and NIV need the publisher's approval in the api.bible dashboard). */
 
 const API_BIBLE = 'https://api.scripture.api.bible/v1'
-let nasbBibleId: string | null = null
 
-async function getNasbBibleId(key: string): Promise<string> {
-  if (nasbBibleId) return nasbBibleId
+interface ApiBibleSpec { abbr: string; name: RegExp; label: string }
+const API_BIBLES: Record<string, ApiBibleSpec> = {
+  nasb: { abbr: 'NASB', name: /new american standard/i, label: 'NASB' },
+  niv:  { abbr: 'NIV',  name: /new international version/i, label: 'NIV' },
+  kjv:  { abbr: 'KJV',  name: /king james version/i, label: 'KJV' },
+}
+const bibleIds: Record<string, string> = {}
+let bibleList: { id: string; abbreviation?: string; name?: string; language?: { id?: string } }[] | null = null
+
+async function listBibles(key: string) {
+  if (bibleList) return bibleList
   const r = await fetch(`${API_BIBLE}/bibles?language=eng`, { headers: { 'api-key': key } })
   if (r.status === 401 || r.status === 403) throw new Error('The API.Bible key was rejected. Check API_BIBLE_KEY on the server.')
   if (!r.ok) throw new Error(`API.Bible returned ${r.status}`)
-  const { data = [] } = await r.json() as { data?: { id: string; abbreviation?: string; name?: string }[] }
+  bibleList = ((await r.json()) as { data?: typeof bibleList }).data ?? []
+  return bibleList
+}
+
+async function getBibleId(key: string, translation: string, spec: ApiBibleSpec): Promise<string> {
+  if (bibleIds[translation]) return bibleIds[translation]
+  const data = await listBibles(key)
   const abbr = (b: { abbreviation?: string }) => (b.abbreviation ?? '').toUpperCase().replace(/[^A-Z0-9]/g, '')
-  const pick = data.find(b => abbr(b) === 'NASB')
-    ?? data.find(b => abbr(b).startsWith('NASB'))
-    ?? data.find(b => /new american standard/i.test(b.name ?? ''))
-  if (!pick) throw new Error('The NASB is not enabled on this API.Bible key. Request it under Bibles in your api.bible dashboard.')
-  nasbBibleId = pick.id
+  const pick = data.find(b => abbr(b) === spec.abbr)
+    ?? data.find(b => abbr(b).startsWith(spec.abbr))
+    ?? data.find(b => spec.name.test(b.name ?? ''))
+  if (!pick) throw new Error(`The ${spec.label} is not enabled on this API.Bible key. Request it under Bibles in your api.bible dashboard.`)
+  bibleIds[translation] = pick.id
   return pick.id
 }
 
-async function fetchNasb(p: RefParams): Promise<Passage> {
+async function fetchApiBible(p: RefParams, translation: string, spec: ApiBibleSpec): Promise<Passage> {
   const key = process.env.API_BIBLE_KEY
-  if (!key) throw new Error('The NASB needs an API.Bible key on the server (API_BIBLE_KEY). Set it in Vercel and redeploy.')
-  if (!p.book || !p.ch) throw new Error('Missing book/chapter for NASB lookup.')
-  const bibleId = await getNasbBibleId(key)
+  if (!key) throw new Error(`The ${spec.label} needs an API.Bible key on the server (API_BIBLE_KEY). Set it in Vercel and redeploy.`)
+  if (!p.book || !p.ch) throw new Error(`Missing book/chapter for ${spec.label} lookup.`)
+  const bibleId = await getBibleId(key, translation, spec)
   const whole = p.ve >= 999
   const passageId = whole ? `${p.book}.${p.ch}` : p.ve > p.vs ? `${p.book}.${p.ch}.${p.vs}-${p.book}.${p.ch}.${p.ve}` : `${p.book}.${p.ch}.${p.vs}`
   const params = new URLSearchParams({
@@ -70,119 +85,15 @@ async function fetchNasb(p: RefParams): Promise<Passage> {
     'include-verse-numbers': 'false', 'include-verse-spans': 'false', 'use-org-id': 'false',
   })
   const r = await fetch(`${API_BIBLE}/bibles/${bibleId}/passages/${passageId}?${params}`, { headers: { 'api-key': key } })
-  if (r.status === 404) throw new Error('That passage was not found in the NASB.')
+  if (r.status === 404) throw new Error(`That passage was not found in the ${spec.label}.`)
   if (!r.ok) throw new Error(`API.Bible returned ${r.status}`)
   const { data } = await r.json() as { data?: { content?: string; reference?: string; verseCount?: number } }
-  const text = clean((data?.content ?? '').replace(/\[\d+\]/g, ' '))
-  if (!text) throw new Error('That passage was not found in the NASB.')
+  const text = clean((data?.content ?? '').replace(/\[\d+\]/g, ' ').replace(/¶/g, ' '))
+  if (!text) throw new Error(`That passage was not found in the ${spec.label}.`)
   const verseCount = data?.verseCount ?? 1
   const verseEnd = whole ? verseCount : p.vs + verseCount - 1
   return { text, reference: data?.reference?.trim() || p.ref, verseEnd, source: 'api.bible' }
 }
-
-/* ---------------- ESV (official API) ---------------- */
-
-async function fetchEsvApi(ref: string, key: string): Promise<Passage> {
-  const params = new URLSearchParams({
-    q: ref, 'include-headings': 'false', 'include-footnotes': 'false', 'include-verse-numbers': 'false',
-    'include-short-copyright': 'false', 'include-passage-references': 'false', 'include-first-verse-numbers': 'false',
-    'include-selahs': 'true', 'indent-paragraphs': '0', 'indent-poetry': 'false',
-  })
-  const r = await fetch(`https://api.esv.org/v3/passage/text/?${params}`, { headers: { Authorization: `Token ${key}` } })
-  if (!r.ok) throw new Error(`ESV API error ${r.status}`)
-  const data = await r.json() as { passages: string[]; canonical: string; passage_meta: { end: number[] }[] }
-  const text = clean(data.passages?.[0] ?? '')
-  if (!text) throw new Error('That passage was not found.')
-  const endPacked = data.passage_meta?.[0]?.end?.[0] ?? 0
-  return { text, reference: data.canonical, verseEnd: endPacked % 1000, source: 'api.esv.org' }
-}
-
-/* ---------------- ESV (reader page, interim) ----------------
-   Markup: <span class="verse" data-ref="43003016" ...><b class="verse-num">16&nbsp;</b>
-           <sup class="footnote">…</sup><sup class="crossref">…</sup><u data-offset="7">For</u><u> </u>…</span> */
-
-async function fetchEsvSite(p: RefParams): Promise<Passage> {
-  if (!p.bn || !p.ch) throw new Error('Missing book/chapter for ESV lookup.')
-  const slug = `${p.bookName} ${p.ch}`.replace(/\s+/g, '+')
-  const r = await fetch(`https://www.esv.org/${slug}/`, { headers: { 'User-Agent': UA, Accept: 'text/html' } })
-  if (!r.ok) throw new Error(`esv.org returned ${r.status}`)
-  const html = await r.text()
-  const verses: { n: number; text: string }[] = []
-  for (const m of html.matchAll(/<span class="verse" data-ref="(\d{2})(\d{3})(\d{3})"/g)) {
-    const [bn, cn, vn] = [Number(m[1]), Number(m[2]), Number(m[3])]
-    if (bn !== p.bn || cn !== p.ch || vn < p.vs || vn > p.ve) continue
-    const inner = balanced(html, m.index!, 'span')
-    const text = clean(decode(inner
-      .replace(/<sup\b[^>]*>[\s\S]*?<\/sup>/gi, ' ')
-      .replace(/<b\b[^>]*class="[^"]*verse-num[^"]*"[^>]*>[\s\S]*?<\/b>/gi, ' ')
-      .replace(/<[^>]*class="[^"]*(psalm-title|chapter-num)[^"]*"[^>]*>[\s\S]*?<\/[^>]+>/gi, ' ')
-      .replace(/<[^>]+>/g, '')))
-    if (text) verses.push({ n: vn, text })
-  }
-  if (!verses.length) throw new Error('That passage was not found on esv.org.')
-  const verseEnd = verses[verses.length - 1].n
-  const reference = `${p.bookName} ${p.ch}:${p.vs}${verseEnd !== p.vs ? `-${verseEnd}` : ''}`
-  return { text: clean(verses.map(v => v.text).join(' ')), reference, verseEnd, source: 'www.esv.org' }
-}
-
-/* ---------------- LSB ----------------
-   index.json?q=REF answers with a redirect to /book/chapter/verses; that path's .json carries
-   pageProps.passages[].passageHtml with <span class="v" data-ref="43.3.16"><sup class="vn">16</sup>…</span>. */
-
-let lsbBuildId: string | null = null
-
-async function getLsbBuildId(force = false): Promise<string> {
-  if (lsbBuildId && !force) return lsbBuildId
-  const r = await fetch('https://read.lsbible.org/', { headers: { 'User-Agent': UA, Accept: 'text/html' } })
-  if (!r.ok) throw new Error(`read.lsbible.org returned ${r.status}`)
-  const html = await r.text()
-  const id = html.match(/"buildId":"([^"]+)"/)?.[1] ?? html.match(/\/_next\/data\/([^/]+)\//)?.[1]
-  if (!id) throw new Error('Could not find the LSB site build id.')
-  lsbBuildId = id
-  return id
-}
-
-async function lsbData(path: string, buildId: string) {
-  return fetch(`https://read.lsbible.org/_next/data/${buildId}${path}`, {
-    headers: { 'User-Agent': UA, Accept: 'application/json', referer: 'https://read.lsbible.org/', 'x-nextjs-data': '1' },
-  })
-}
-
-async function fetchLsb(ref: string, retry = true): Promise<Passage> {
-  const buildId = await getLsbBuildId()
-  let r = await lsbData(`/index.json?q=${encodeURIComponent(ref)}`, buildId)
-  if (r.status === 404 && retry) { await getLsbBuildId(true); return fetchLsb(ref, false) } // build id rotated
-  if (!r.ok) throw new Error(`read.lsbible.org returned ${r.status}`)
-  let data = await r.json() as { pageProps?: { __N_REDIRECT?: string; passages?: LsbPassage[] } }
-  if (data.pageProps?.__N_REDIRECT) {
-    r = await lsbData(`${data.pageProps.__N_REDIRECT}.json`, buildId)
-    if (!r.ok) throw new Error(`read.lsbible.org returned ${r.status}`)
-    data = await r.json()
-  }
-  const passages = data.pageProps?.passages ?? []
-  if (!passages.length) throw new Error('That passage was not found in the LSB.')
-  const verses: string[] = []
-  let verseEnd = 0
-  for (const p of passages) {
-    const html = p.passageHtml ?? ''
-    for (const m of html.matchAll(/<span class="v[ "][^>]*data-ref="(\d+)\.(\d+)\.(\d+)"/g)) {
-      verseEnd = Number(m[3])
-      const inner = balanced(html, m.index!, 'span')
-      const text = clean(decode(inner
-        .replace(/<sup\b[^>]*>[\s\S]*?<\/sup>/gi, ' ')
-        .replace(/<b\b[^>]*class="[^"]*chapnum[^"]*"[^>]*>[\s\S]*?<\/b>/gi, ' ')
-        .replace(/<div\b[^>]*class="[^"]*psalm-title[^"]*"[^>]*>[\s\S]*?<\/div>/gi, ' ')
-        .replace(/<\/span>/g, ' ').replace(/<[^>]+>/g, '')))
-      if (text) verses.push(text)
-    }
-    if (!verseEnd && p.to?.vn) verseEnd = p.to.vn
-  }
-  const text = clean(verses.join(' '))
-  if (!text) throw new Error('Could not read the LSB passage.')
-  return { text, reference: passages[0]?.title?.trim() || ref, verseEnd, source: 'read.lsbible.org' }
-}
-
-interface LsbPassage { title?: string; passageHtml?: string; from?: { bn: number; cn: number; vn: number }; to?: { bn: number; cn: number; vn: number } }
 
 /* ---------------- helpers ---------------- */
 

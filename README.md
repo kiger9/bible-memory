@@ -12,7 +12,7 @@ A personal scripture-memorization web app that runs as a PWA on your phone. Add 
   - `api/passage.ts` fetches licensed translations server-side. ESV uses the official api.esv.org when `ESV_API_KEY` is set and otherwise reads the public passage page at esv.org as an interim measure. LSB reads the data route behind read.lsbible.org (unofficial, personal use, within Lockman's 1,000-verse quotation permission)
   - `api/hints.ts` calls Claude once per verse to generate thought-chunk hints
 
-Public-domain translations (WEB, KJV, ASV, BBE, Darby, YLT) are fetched from bible-api.com directly from the browser, no key needed. NASB, ESV and LSB go through the proxy. The NASB comes from API.Bible and needs `API_BIBLE_KEY` with the NASB enabled on that key. Licensed translations without a hobby-friendly API (NIV, NLT, CSB) can be pasted in by hand with the "Paste my own text" option; that text stays on the device.
+Public-domain translations (WEB, ASV, BBE, Darby, YLT) are fetched from bible-api.com directly from the browser, no key needed. NASB, ESV, LSB, KJV and NIV go through the proxy. NASB, NIV and KJV come from API.Bible and need `API_BIBLE_KEY` with each Bible enabled on that key. Licensed translations without a hobby-friendly API (NLT, CSB, NKJV) can be pasted in by hand with the "Paste my own text" option; that text stays on the device.
 
 ## Local development
 
@@ -30,7 +30,7 @@ Open the printed URL on your phone (same Wi-Fi) to try it. The `/api` functions 
 3. Project Settings, Environment Variables, add:
    - `ANTHROPIC_API_KEY` (console.anthropic.com) for hints
    - `ESV_API_KEY` (api.esv.org, free for non-commercial use) for the ESV
-   - `API_BIBLE_KEY` (scripture.api.bible, free tier) for the NASB. After creating the key, request the NASB under Bibles in the api.bible dashboard; Lockman has to approve it on your key
+   - `API_BIBLE_KEY` (scripture.api.bible, free tier) for the NASB, NIV and KJV. After creating the key, request the NASB and NIV under Bibles in the api.bible dashboard; the publishers have to approve them on your key
    - `GROQ_API_KEY` (console.groq.com) for speak-aloud practice in the installed iOS app, where the Web Speech API is unavailable and the app records audio and transcribes it via `api/transcribe.ts`
    - `VITE_SYNC_URL` set to your Cloudflare Worker URL for cloud backup (see below). Without it the app falls back to `api/sync.ts`, which needs `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` from the Vercel Storage tab (Upstash Redis).
 4. Deploy. Open the URL on your phone, then Share, "Add to Home Screen".
