@@ -106,3 +106,4 @@ a { color: var(--accent); }
 .code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .06em; color: var(--ink); user-select: all; -webkit-user-select: all; white-space: nowrap; }
 .restore { margin-top: var(--sp-3); }
 .restore summary { color: var(--ink-3); font-size: var(--fs-caption); cursor: pointer; min-height: var(--tap); display: flex; align-items: center; }
+.build { text-align: center; margin-top: var(--sp-4); }

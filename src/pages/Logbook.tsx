@@ -44,6 +44,7 @@ export default function Logbook() {
         <button className="button ghost" onClick={doExport}>Export file</button>
         <label className="button ghost">Import file<input type="file" accept="application/json" onChange={doImport} hidden /></label>
       </section>
+      <p className="muted build">Build {__BUILD__}</p>
     </>
   )
 }
