@@ -28,7 +28,9 @@ a { color: var(--accent); }
 .splash-verse { margin: var(--sp-3) 0 0; font-family: var(--font-serif); }
 .splash-verse p { margin: 0; font-size: var(--fs-h3); font-style: italic; line-height: var(--lh-body); }
 .splash-verse cite { display: block; margin-top: var(--sp-2); font-style: normal; font-family: var(--font-sans); font-size: var(--fs-caption); color: var(--ink-3); letter-spacing: .04em; }
-.splash-legal { margin: 0; font-size: var(--fs-micro); color: var(--ink-3); letter-spacing: .02em; text-align: center; }
+.splash-legal { margin: 0; font-size: var(--fs-micro); color: var(--ink-3); letter-spacing: .02em; text-align: center; line-height: 1.45; max-width: 36em; }
+.splash-legal p { margin: 0 0 var(--sp-1); }
+.splash-legal a, .attribution a { color: inherit; text-decoration: underline; }
 @media (prefers-reduced-motion: reduce) { .splash { transition: none; } }
 
 /* Tab bar */

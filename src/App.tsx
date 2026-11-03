@@ -10,9 +10,10 @@ import Quiz from './pages/Quiz'
 import Logbook from './pages/Logbook'
 import { requestPersistence } from './lib/db'
 import { syncOnLaunch } from './lib/sync'
+import { refreshLicensedText } from './lib/refresh'
 
 export default function App() {
-  useEffect(() => { requestPersistence(); syncOnLaunch() }, [])
+  useEffect(() => { requestPersistence(); syncOnLaunch().then(refreshLicensedText) }, [])
   return (
     <div className="app">
       <Splash />

@@ -3,7 +3,7 @@ import type { ParsedRef } from './refs'
 import { BOOKS } from './books'
 
 export const TRANSLATIONS: Translation[] = [
-  { id: 'nasb', name: 'New American Standard Bible', abbr: 'NASB', source: 'proxy', attribution: 'Scripture quotations taken from the (NASB®) New American Standard Bible®, Copyright © 1960, 1971, 1977, 1995, 2020 by The Lockman Foundation. Used by permission. All rights reserved. lockman.org' },
+  { id: 'nasb', name: 'New American Standard Bible', abbr: 'NASB', source: 'proxy', attribution: 'Scripture quotations marked NASB © are taken from the New American Standard Bible®, Copyright © 1960, 1971, 1977, 1995, 2020 by The Lockman Foundation. Used by permission. All rights reserved. The NASB text may not be quoted in any publication made available to the public by a Creative Commons license. The NASB may not be translated into any other language. Website: www.lockman.org', provider: 'api.bible' },
   { id: 'esv',  name: 'English Standard Version', abbr: 'ESV', source: 'proxy', attribution: 'Scripture quotations are from the ESV® Bible (The Holy Bible, English Standard Version®), © 2001 by Crossway. Used by permission. All rights reserved.' },
   { id: 'lsb',  name: 'Legacy Standard Bible', abbr: 'LSB', source: 'proxy', attribution: 'Scripture quotations taken from the (LSB®) Legacy Standard Bible®, Copyright © 2021 by The Lockman Foundation. Used by permission. All rights reserved. Managed in partnership with Three Sixteen Publishing Inc. LSBible.org' },
   { id: 'web',  name: 'World English Bible', abbr: 'WEB', source: 'direct', attribution: 'World English Bible, public domain.' },

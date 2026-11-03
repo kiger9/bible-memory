@@ -7,6 +7,8 @@ export interface Translation {
   /** 'direct' = browser calls the public API; 'proxy' = goes through /api (needs a key) */
   source: 'direct' | 'proxy' | 'manual'
   attribution: string
+  /** Text provider that requires its own visible credit (API.Bible Starter plan terms). */
+  provider?: 'api.bible'
 }
 
 /** One contiguous passage the user wants to memorize. */
@@ -23,6 +25,7 @@ export interface Verse {
   words: string[]            // tokenized text (display tokens, punctuation kept)
   chunks?: ThoughtChunk[]    // LLM-generated hint structure (optional until fetched)
   createdAt: number
+  fetchedAt?: number         // when the text was last fetched from its provider (licensed text is refreshed every 30 days)
   tags?: string[]
 }
 

@@ -55,7 +55,7 @@ export default function AddVerse() {
     const id = await db.verses.add({
       reference: preview.reference, bookId: parsed.book.id, chapter: parsed.chapter,
       verseStart: parsed.verseStart, verseEnd: preview.verseEnd, translation, translationLabel: isManual ? ownLabel.trim() || 'Own' : undefined,
-      text: preview.text, words, chunks, createdAt: Date.now(),
+      text: preview.text, words, chunks, createdAt: Date.now(), fetchedAt: Date.now(),
     })
     await db.reviews.put(newReviewState(id as number))
     await db.settings.put({ ...(await getSettings()), defaultTranslation: translation })
@@ -97,6 +97,7 @@ export default function AddVerse() {
           <VerseText text={preview.text} reference={`${preview.reference} (${isManual ? ownLabel : getTranslation(translation).abbr})`} />
           <button className="button primary" onClick={save} disabled={busy}>{busy ? 'Saving…' : 'Memorize this'}</button>
           <p className="attribution">{getTranslation(translation).attribution}</p>
+          {getTranslation(translation).provider === 'api.bible' && <p className="attribution">Scripture text provided by <a href="https://api.bible" target="_blank" rel="noopener">API.Bible</a>.</p>}
         </section>
       )}
     </>

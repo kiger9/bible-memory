@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import Wordmark from './Wordmark'
+import { getTranslation } from '../lib/bible'
 
 const KEY = 'kept-splash-shown'
 
@@ -31,7 +32,11 @@ export default function Splash() {
           <cite>Psalm 119:67</cite>
         </blockquote>
       </div>
-      <p className="splash-legal">A devotional app for personal use.</p>
+      <div className="splash-legal" onClick={e => e.stopPropagation()}>
+        <p>A devotional app for personal use.</p>
+        <p>{getTranslation('nasb').attribution}</p>
+        <p>Scripture text provided by <a href="https://api.bible" target="_blank" rel="noopener">API.Bible</a>.</p>
+      </div>
     </div>
   )
 }
