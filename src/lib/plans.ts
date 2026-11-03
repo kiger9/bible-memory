@@ -14,7 +14,7 @@ export const PLANS: StudyPlan[] = [
     description: 'Twelve passages from the epistles for the year: holding fast, living out the faith, and handling the word rightly.',
     passages: [
       'Colossians 3:1-4',
-      'Philippians 1:15-16',
+      'Philemon 1:15-16',
       'Jude 1:3-4',
       '1 Peter 2:21-25',
       '2 Peter 3:17-18',
