@@ -7,7 +7,7 @@ compatibility_date = "2026-10-01"
 
 [[kv_namespaces]]
 binding = "KEPT_SYNC"
-id = "REPLACE_WITH_NAMESPACE_ID"
+id = "c5be2d03f0e94b0a995d842c1ca36afd"
 
 [vars]
 # Origins allowed to call this worker. Add your custom domain here if you set one up.
