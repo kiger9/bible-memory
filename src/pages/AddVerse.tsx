@@ -1,13 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { db, getSettings } from '../lib/db'
+import { getSettings } from '../lib/db'
 import { parseReference } from '../lib/refs'
 import { TRANSLATIONS, fetchPassage, getTranslation } from '../lib/bible'
-import { tokenize } from '../lib/text'
-import { newReviewState } from '../lib/srs'
-import type { TranslationId, ThoughtChunk } from '../lib/types'
+import { addVerse } from '../lib/verses'
+import type { TranslationId } from '../lib/types'
 import Header from '../components/Header'
-import { scheduleSync } from '../lib/sync'
 import VerseText from '../components/VerseText'
 
 export default function AddVerse() {
@@ -43,24 +41,10 @@ export default function AddVerse() {
     const parsed = parseReference(ref)
     if ('error' in parsed || !preview) return
     setBusy(true)
-    const words = tokenize(preview.text)
-    let chunks: ThoughtChunk[] | undefined
     try {
-      const r = await fetch('/api/hints', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reference: preview.reference, translation: isManual ? ownLabel : getTranslation(translation).abbr, words }),
-      })
-      if (r.ok) chunks = (await r.json()).chunks
-    } catch { /* hints are optional; first-letter hints still work */ }
-    const id = await db.verses.add({
-      reference: preview.reference, bookId: parsed.book.id, chapter: parsed.chapter,
-      verseStart: parsed.verseStart, verseEnd: preview.verseEnd, translation, translationLabel: isManual ? ownLabel.trim() || 'Own' : undefined,
-      text: preview.text, words, chunks, createdAt: Date.now(), fetchedAt: Date.now(),
-    })
-    await db.reviews.put(newReviewState(id as number))
-    await db.settings.put({ ...(await getSettings()), defaultTranslation: translation })
-    scheduleSync(1000)
-    nav(`/practice/${id}`, { replace: true })
+      const id = await addVerse(parsed, translation, { passage: preview, translationLabel: ownLabel, rememberTranslation: true })
+      nav(`/practice/${id}`, { replace: true })
+    } catch (e) { setError((e as Error).message); setBusy(false) }
   }
 
   return (

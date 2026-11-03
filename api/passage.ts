@@ -12,12 +12,13 @@ const UA = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/6
 
 export interface Passage { text: string; reference: string; verseEnd: number; source: string }
 
-export interface RefParams { ref: string; bookName: string; book: string; bn: number; ch: number; vs: number; ve: number }
+export interface RefParams { ref: string; bookName: string; book: string; bn: number; ch: number; vs: number; ve: number; ce: number }
 
 export default async function handler(req: Req, res: Res) {
   const q = (k: string) => String(req.query[k] ?? '').trim()
   const ref = q('ref'), translation = q('translation')
-  const params: RefParams = { ref, bookName: ref.replace(/\s+\d+(:\d+(-\d+)?)?$/, ''), book: q('book').toUpperCase(), bn: Number(q('bn')), ch: Number(q('ch')), vs: Number(q('vs')) || 1, ve: Number(q('ve')) || 999 }
+  const params: RefParams = { ref, bookName: ref.replace(/\s+\d+(:\d+(-\d+)?)?$/, ''), book: q('book').toUpperCase(), bn: Number(q('bn')), ch: Number(q('ch')), vs: Number(q('vs')) || 1, ve: Number(q('ve')) || 999, ce: 0 }
+  params.ce = Number(q('ce')) || params.ch
   if (!ref) return res.status(400).send('Missing ref')
   try {
     const out = await fetchProxied(params, translation)
@@ -83,7 +84,10 @@ async function fetchApiBible(p: RefParams, translation: string, spec: ApiBibleSp
   if (!p.book || !p.ch) throw new Error(`Missing book/chapter for ${spec.label} lookup.`)
   const bibleId = await getBibleId(key, translation, spec)
   const whole = p.ve >= 999
-  const passageId = whole ? `${p.book}.${p.ch}` : p.ve > p.vs ? `${p.book}.${p.ch}.${p.vs}-${p.book}.${p.ch}.${p.ve}` : `${p.book}.${p.ch}.${p.vs}`
+  const cross = (p.ce || p.ch) > p.ch
+  const passageId = whole ? `${p.book}.${p.ch}`
+    : cross ? `${p.book}.${p.ch}.${p.vs}-${p.book}.${p.ce}.${p.ve}`
+    : p.ve > p.vs ? `${p.book}.${p.ch}.${p.vs}-${p.book}.${p.ch}.${p.ve}` : `${p.book}.${p.ch}.${p.vs}`
   const params = new URLSearchParams({
     'content-type': 'text', 'include-notes': 'false', 'include-titles': 'false', 'include-chapter-numbers': 'false',
     'include-verse-numbers': 'false', 'include-verse-spans': 'false', 'use-org-id': 'false',
@@ -95,7 +99,7 @@ async function fetchApiBible(p: RefParams, translation: string, spec: ApiBibleSp
   const text = clean((data?.content ?? '').replace(/\[\d+\]/g, ' ').replace(/¶/g, ' '))
   if (!text) throw new Error(`That passage was not found in the ${spec.label}.`)
   const verseCount = data?.verseCount ?? 1
-  const verseEnd = whole ? verseCount : p.vs + verseCount - 1
+  const verseEnd = whole ? verseCount : cross ? p.ve : p.vs + verseCount - 1
   return { text, reference: data?.reference?.trim() || p.ref, verseEnd, source: `api.bible: ${bibleNames[translation] ?? bibleId}` }
 }
 
@@ -122,25 +126,35 @@ async function fetchEsvApi(ref: string, key: string): Promise<Passage> {
 
 async function fetchEsvSite(p: RefParams): Promise<Passage> {
   if (!p.bn || !p.ch) throw new Error('Missing book/chapter for ESV lookup.')
-  const slug = `${p.bookName} ${p.ch}`.replace(/\s+/g, '+')
-  const r = await fetch(`https://www.esv.org/${slug}/`, { headers: { 'User-Agent': UA, Accept: 'text/html' } })
-  if (!r.ok) throw new Error(`esv.org returned ${r.status}`)
-  const html = await r.text()
-  const verses: { n: number; text: string }[] = []
-  for (const m of html.matchAll(/<span class="verse" data-ref="(\d{2})(\d{3})(\d{3})"/g)) {
-    const [bn, cn, vn] = [Number(m[1]), Number(m[2]), Number(m[3])]
-    if (bn !== p.bn || cn !== p.ch || vn < p.vs || vn > p.ve) continue
-    const inner = balanced(html, m.index!, 'span')
-    const text = clean(decode(inner
-      .replace(/<sup\b[^>]*>[\s\S]*?<\/sup>/gi, ' ')
-      .replace(/<b\b[^>]*class="[^"]*verse-num[^"]*"[^>]*>[\s\S]*?<\/b>/gi, ' ')
-      .replace(/<[^>]*class="[^"]*(psalm-title|chapter-num)[^"]*"[^>]*>[\s\S]*?<\/[^>]+>/gi, ' ')
-      .replace(/<[^>]+>/g, '')))
-    if (text) verses.push({ n: vn, text })
+  const ce = Math.max(p.ce || p.ch, p.ch)
+  const verses: { c: number; n: number; text: string }[] = []
+  const seen = new Set<string>()
+  for (let c = p.ch; c <= ce; c++) {
+    const slug = `${p.bookName} ${c}`.replace(/\s+/g, '+')
+    const r = await fetch(`https://www.esv.org/${slug}/`, { headers: { 'User-Agent': UA, Accept: 'text/html' } })
+    if (!r.ok) throw new Error(`esv.org returned ${r.status}`)
+    const html = await r.text()
+    for (const m of html.matchAll(/<span class="verse" data-ref="(\d{2})(\d{3})(\d{3})"/g)) {
+      const [bn, cn, vn] = [Number(m[1]), Number(m[2]), Number(m[3])]
+      if (bn !== p.bn || cn < p.ch || cn > ce) continue
+      if ((cn === p.ch && vn < p.vs) || (cn === ce && vn > p.ve)) continue
+      const key = `${cn}:${vn}`
+      if (seen.has(key)) continue
+      const inner = balanced(html, m.index!, 'span')
+      const text = clean(decode(inner
+        .replace(/<sup\b[^>]*>[\s\S]*?<\/sup>/gi, ' ')
+        .replace(/<b\b[^>]*class="[^"]*verse-num[^"]*"[^>]*>[\s\S]*?<\/b>/gi, ' ')
+        .replace(/<[^>]*class="[^"]*(psalm-title|chapter-num)[^"]*"[^>]*>[\s\S]*?<\/[^>]+>/gi, ' ')
+        .replace(/<[^>]+>/g, '')))
+      if (text) { verses.push({ c: cn, n: vn, text }); seen.add(key) }
+    }
   }
   if (!verses.length) throw new Error('That passage was not found on esv.org.')
-  const verseEnd = verses[verses.length - 1].n
-  const reference = `${p.bookName} ${p.ch}:${p.vs}${verseEnd !== p.vs ? `-${verseEnd}` : ''}`
+  const last = verses[verses.length - 1]
+  const verseEnd = last.n
+  const reference = last.c !== p.ch
+    ? `${p.bookName} ${p.ch}:${p.vs}-${last.c}:${verseEnd}`
+    : `${p.bookName} ${p.ch}:${p.vs}${verseEnd !== p.vs ? `-${verseEnd}` : ''}`
   return { text: clean(verses.map(v => v.text).join(' ')), reference, verseEnd, source: 'www.esv.org' }
 }
 

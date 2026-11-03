@@ -1,0 +1,5 @@
+.plan-meta { font-size: 0.85rem; color: var(--muted, #777); margin-top: 2px; }
+.plan-desc { margin: 0 0 1rem; }
+.plan-row-end { flex: none; margin-left: 12px; font-size: 0.9rem; }
+.plan-row-end.muted { opacity: 0.7; }
+.plan-add-all { width: 100%; margin: 0.25rem 0 1.25rem; }

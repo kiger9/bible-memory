@@ -107,3 +107,4 @@ a { color: var(--accent); }
 .restore { margin-top: var(--sp-3); }
 .restore summary { color: var(--ink-3); font-size: var(--fs-caption); cursor: pointer; min-height: var(--tap); display: flex; align-items: center; }
 .build { text-align: center; margin-top: var(--sp-4); }
+.prefs { margin-top: var(--sp-3); margin-bottom: var(--sp-5); }

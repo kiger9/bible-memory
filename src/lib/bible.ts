@@ -26,7 +26,7 @@ export interface FetchedPassage { text: string; reference: string; verseEnd: num
 /** Fetch passage text. Public-domain translations go straight to bible-api.com; keyed ones via /api. */
 export async function fetchPassage(ref: ParsedRef, translation: TranslationId): Promise<FetchedPassage> {
   const t = getTranslation(translation)
-  const q = ref.verseEnd === 999 ? `${ref.book.name} ${ref.chapter}` : `${ref.book.name} ${ref.chapter}:${ref.verseStart}${ref.verseEnd !== ref.verseStart ? `-${ref.verseEnd}` : ''}`
+  const q = ref.canonical
   if (t.source === 'direct') {
     const url = `https://bible-api.com/${encodeURIComponent(q)}?translation=${t.id}`
     const res = await fetch(url)
@@ -38,7 +38,7 @@ export async function fetchPassage(ref: ParsedRef, translation: TranslationId): 
   }
   const params = new URLSearchParams({
     ref: q, translation: t.id, book: ref.book.id, bn: String(BOOKS.findIndex(b => b.id === ref.book.id) + 1),
-    ch: String(ref.chapter), vs: String(ref.verseStart), ve: String(ref.verseEnd),
+    ch: String(ref.chapter), vs: String(ref.verseStart), ve: String(ref.verseEnd), ce: String(ref.chapterEnd),
   })
   const res = await fetch(`/api/passage?${params}`)
   if (!res.ok) {

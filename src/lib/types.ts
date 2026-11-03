@@ -19,6 +19,7 @@ export interface Verse {
   chapter: number
   verseStart: number
   verseEnd: number
+  chapterEnd?: number        // set when the passage runs into a later chapter, e.g. 2 Timothy 3:16-4:5
   translation: TranslationId
   translationLabel?: string   // e.g. "NIV" when translation === 'custom'
   text: string               // plain text, verse numbers stripped

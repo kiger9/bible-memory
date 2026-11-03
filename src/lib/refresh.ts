@@ -20,7 +20,7 @@ export async function refreshLicensedText() {
     const book = BOOKS.find(b => b.id === v.bookId)
     if (!book) continue
     try {
-      const fresh = await fetchPassage({ book, chapter: v.chapter, verseStart: v.verseStart, verseEnd: v.verseEnd, canonical: v.reference }, v.translation)
+      const fresh = await fetchPassage({ book, chapter: v.chapter, verseStart: v.verseStart, verseEnd: v.verseEnd, chapterEnd: v.chapterEnd ?? v.chapter, canonical: v.reference }, v.translation)
       const same = fresh.text === v.text
       await db.verses.update(v.id!, same ? { fetchedAt: Date.now() } : { text: fresh.text, words: tokenize(fresh.text), chunks: undefined, fetchedAt: Date.now() })
       changed ||= !same

@@ -7,7 +7,9 @@ import Verses from './pages/Verses'
 import AddVerse from './pages/AddVerse'
 import Practice from './pages/Practice'
 import Quiz from './pages/Quiz'
-import Logbook from './pages/Logbook'
+import Settings from './pages/Settings'
+import Plans from './pages/Plans'
+import PlanDetail from './pages/PlanDetail'
 import { requestPersistence } from './lib/db'
 import { syncOnLaunch } from './lib/sync'
 import { refreshLicensedText } from './lib/refresh'
@@ -24,7 +26,10 @@ export default function App() {
           <Route path="/verses/new" element={<AddVerse />} />
           <Route path="/practice/:id" element={<Practice />} />
           <Route path="/quiz" element={<Quiz />} />
-          <Route path="/logbook" element={<Logbook />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/plans" element={<Plans />} />
+          <Route path="/plans/:id" element={<PlanDetail />} />
+          <Route path="/logbook" element={<Navigate to="/settings" replace />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

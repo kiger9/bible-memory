@@ -8,6 +8,8 @@ import type { Verse } from '../lib/types'
 
 export default function Verses() {
   const verses = useLiveQuery(() => db.verses.orderBy('createdAt').reverse().toArray(), [])
+  const attempts = useLiveQuery(() => db.attempts.toArray(), [])
+  const reviews = useLiveQuery(() => db.reviews.toArray(), [])
   const [editing, setEditing] = useState(false)
   const canEdit = (verses?.length ?? 0) > 0
 
@@ -16,6 +18,16 @@ export default function Verses() {
     await deleteVerse(v.id!)
     scheduleSync(500)
     if ((await db.verses.count()) === 0) setEditing(false)
+  }
+
+  function stats(v: Verse) {
+    if (!attempts || !reviews) return ' '
+    const mine = attempts.filter(a => a.verseId === v.id && a.mode !== 'read')
+    const best = mine.reduce((m, a) => Math.max(m, a.accuracy), 0)
+    const r = reviews.find(r => r.verseId === v.id)
+    if (mine.length === 0) return 'Not practised yet'
+    const next = r && r.reps > 0 ? ` · next ${new Date(r.due).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : ''
+    return `${mine.length} attempt${mine.length === 1 ? '' : 's'} · best ${Math.round(best * 100)}%${next}`
   }
 
   const action = editing
@@ -28,6 +40,13 @@ export default function Verses() {
   return (
     <>
       <Header title="Verses" action={action} />
+      <Link to="/plans" className="row">
+        <div>
+          <div className="row-title">Study plans</div>
+          <div className="row-sub">Add a whole set of passages at once</div>
+        </div>
+        <span className="chev">›</span>
+      </Link>
       {verses?.length === 0 && <p className="lede">No verses yet.</p>}
       {verses?.map(v => editing ? (
         <div key={v.id} className="row">
@@ -40,8 +59,8 @@ export default function Verses() {
       ) : (
         <Link key={v.id} to={`/practice/${v.id}`} className="row">
           <div>
-            <div className="row-title">{v.reference}</div>
-            <div className="row-sub">{v.text.slice(0, 70)}{v.text.length > 70 ? '…' : ''}</div>
+            <div className="row-title">{v.reference} <span className="muted">{(v.translationLabel ?? v.translation.toUpperCase())}</span></div>
+            <div className="row-sub">{stats(v)}</div>
           </div>
           <span className="chev">›</span>
         </Link>

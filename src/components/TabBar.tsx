@@ -4,7 +4,7 @@ const tabs = [
   { to: '/', label: 'Today' },
   { to: '/verses', label: 'Verses' },
   { to: '/quiz', label: 'Quiz' },
-  { to: '/logbook', label: 'Logbook' },
+  { to: '/settings', label: 'Settings' },
 ]
 
 export default function TabBar() {

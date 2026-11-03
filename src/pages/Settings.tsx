@@ -1,16 +1,21 @@
-import { useState } from 'react'
-import { useLiveQuery } from 'dexie-react-hooks'
-import { Link } from 'react-router-dom'
-import { db, exportAll, importAll } from '../lib/db'
+import { useEffect, useState } from 'react'
+import { db, exportAll, importAll, getSettings } from '../lib/db'
 import Header from '../components/Header'
+import { TRANSLATIONS } from '../lib/bible'
 import { getCode, formatCode, lastSynced, restore, push, scheduleSync } from '../lib/sync'
+import type { Settings as SettingsRow } from '../lib/types'
 
-export default function Logbook() {
-  const verses = useLiveQuery(() => db.verses.orderBy('createdAt').toArray(), [])
-  const attempts = useLiveQuery(() => db.attempts.toArray(), [])
-  const reviews = useLiveQuery(() => db.reviews.toArray(), [])
-  if (!verses || !attempts || !reviews) return null
+export default function Settings() {
+  const [settings, setSettings] = useState<SettingsRow | null>(null)
+  useEffect(() => { getSettings().then(setSettings) }, [])
 
+  async function setDefaultTranslation(defaultTranslation: SettingsRow['defaultTranslation']) {
+    if (!settings) return
+    const next = { ...settings, defaultTranslation }
+    setSettings(next)
+    await db.settings.put(next)
+    scheduleSync(500)
+  }
   async function doExport() {
     const blob = new Blob([JSON.stringify(await exportAll(), null, 2)], { type: 'application/json' })
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `bible-memory-${new Date().toISOString().slice(0, 10)}.json`; a.click()
@@ -23,22 +28,18 @@ export default function Logbook() {
 
   return (
     <>
-      <Header title="Logbook" />
-      <p className="muted">{verses.length} verse{verses.length === 1 ? '' : 's'} · {attempts.length} practice session{attempts.length === 1 ? '' : 's'}</p>
-      {verses.map(v => {
-        const mine = attempts.filter(a => a.verseId === v.id && a.mode !== 'read')
-        const best = mine.reduce((m, a) => Math.max(m, a.accuracy), 0)
-        const r = reviews.find(r => r.verseId === v.id)
-        return (
-          <Link key={v.id} to={`/practice/${v.id}`} className="row">
-            <div>
-              <div className="row-title">{v.reference} <span className="muted">{(v.translationLabel ?? v.translation.toUpperCase())}</span></div>
-              <div className="row-sub">Added {new Date(v.createdAt).toLocaleDateString()} · {mine.length} attempts · best {Math.round(best * 100)}%{r && r.reps > 0 ? ` · next ${new Date(r.due).toLocaleDateString()}` : ''}</div>
-            </div>
-            <span className="chev">›</span>
-          </Link>
-        )
-      })}
+      <Header title="Settings" />
+      <section className="prefs">
+        <h2 className="section-title">Preferences</h2>
+        {settings && (
+          <label className="field">
+            <span>Default translation</span>
+            <select value={settings.defaultTranslation} onChange={e => setDefaultTranslation(e.target.value as SettingsRow['defaultTranslation'])}>
+              {TRANSLATIONS.map(t => <option key={t.id} value={t.id}>{t.abbr} — {t.name}</option>)}
+            </select>
+          </label>
+        )}
+      </section>
       <BackupPanel />
       <section className="actions">
         <button className="button ghost" onClick={doExport}>Export file</button>

@@ -13,6 +13,7 @@ export default function Today() {
 
   const dueIds = new Set(reviews.filter(r => r.due <= now).map(r => r.verseId))
   const due = verses.filter(v => dueIds.has(v.id!))
+  const next = reviews.length ? Math.min(...reviews.map(r => r.due)) : null
   const fresh = verses.filter(v => !reviews.some(r => r.verseId === v.id))
 
   return (
@@ -21,7 +22,10 @@ export default function Today() {
       {verses.length === 0 && (
         <section className="empty">
           <p className="lede">Nothing here yet. Add a verse you want to carry with you.</p>
-          <Link className="button primary" to="/verses/new">Add a verse</Link>
+          <div className="actions">
+            <Link className="button primary" to="/verses/new">Add a verse</Link>
+            <Link className="button ghost" to="/plans">Browse study plans</Link>
+          </div>
         </section>
       )}
       {verses.length > 0 && (
@@ -36,11 +40,12 @@ export default function Today() {
               <span className="chev">›</span>
             </Link>
           ))}
-          {due.length === 0 && fresh.length === 0 && <p className="lede">All caught up. Come back tomorrow, or <Link to="/quiz">play a pop quiz</Link>.</p>}
+          {due.length === 0 && fresh.length === 0 && <p className="lede">All caught up. {next !== null ? <>Next review {fmtNext(next)}, or </> : <>Come back tomorrow, or </>}<Link to="/quiz">play a pop quiz</Link>.</p>}
         </section>
       )}
     </>
   )
 }
 
+function fmtNext(t: number) { return new Date(t).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }).replace(',', '') }
 function startOfDay() { const d = new Date(); d.setHours(0, 0, 0, 0); return d.getTime() }
