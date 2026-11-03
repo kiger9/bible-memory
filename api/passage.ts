@@ -17,7 +17,7 @@ export interface RefParams { ref: string; bookName: string; book: string; bn: nu
 export default async function handler(req: Req, res: Res) {
   const q = (k: string) => String(req.query[k] ?? '').trim()
   const ref = q('ref'), translation = q('translation')
-  const params: RefParams = { ref, bookName: ref.replace(/\s+\d+(:\d+(-\d+)?)?$/, ''), book: q('book').toUpperCase(), bn: Number(q('bn')), ch: Number(q('ch')), vs: Number(q('vs')) || 1, ve: Number(q('ve')) || 999, ce: 0 }
+  const params: RefParams = { ref, bookName: ref.replace(/\s+\d+(:\d+(\s*-\s*(\d+:)?\d+)?)?$/, ''), book: q('book').toUpperCase(), bn: Number(q('bn')), ch: Number(q('ch')), vs: Number(q('vs')) || 1, ve: Number(q('ve')) || 999, ce: 0 }
   params.ce = Number(q('ce')) || params.ch
   if (!ref) return res.status(400).send('Missing ref')
   try {
