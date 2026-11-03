@@ -1,27 +1,51 @@
 /**
- * Encrypted cloud backup keyed by a passphrase the user chooses.
- * The phrase derives (a) a storage id and (b) an AES-GCM key via PBKDF2; the server only ever
- * stores ciphertext. Reinstall the app, enter the same phrase, and everything comes back.
+ * Automatic encrypted cloud backup. Nothing to turn on and nothing to remember.
+ *
+ * On first launch the app makes a random backup code and keeps it on the phone. The code derives
+ * (a) a storage id and (b) an AES-GCM key; the whole database is encrypted and uploaded after every
+ * change, so the server only ever sees ciphertext. A reinstall or a new phone loses the code with
+ * everything else, so the Logbook shows it: enter it on the new phone and the backup is restored.
  */
-import { db, exportAll, importAll } from './db'
+import { db, exportAll, replaceAll } from './db'
 
 /** Where backups live: a Cloudflare Worker (VITE_SYNC_URL, set at build time) or the Vercel function + Upstash fallback. */
 const SYNC_URL = (import.meta.env.VITE_SYNC_URL as string | undefined)?.replace(/\/$/, '') || '/api/sync'
 
-const PHRASE_KEY = 'kept-sync-phrase'
+const CODE_KEY = 'kept-backup-code'
 const LAST_KEY = 'kept-sync-last'
 const enc = new TextEncoder(), dec = new TextDecoder()
+const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789' // 32 symbols, no 0/O/1/I
 
-export function getPhrase(): string | null { try { return localStorage.getItem(PHRASE_KEY) } catch { return null } }
+function makeCode(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(16))
+  return Array.from(bytes).map(b => ALPHABET[b % 32]).join('')
+}
+/** Normalise what a person typed: uppercase, drop dashes and spaces, map lookalikes. */
+export function cleanCode(s: string): string {
+  return s.toUpperCase().replace(/[^A-Z0-9]/g, '').replace(/0/g, 'O').replace(/[1I]/g, 'L')
+}
+export function isCode(s: string): boolean { return s.length === 16 && [...s].every(c => ALPHABET.includes(c)) }
+/** Display form: ABCD-EFGH-JKLM-NPQR */
+export function formatCode(s: string): string { return s.match(/.{1,4}/g)?.join('-') ?? s }
+
+/** The device's backup code, created on first use. */
+export function getCode(): string {
+  let code: string | null = null
+  try { code = localStorage.getItem(CODE_KEY) } catch { /* ignore */ }
+  if (!code || !isCode(code)) {
+    code = makeCode()
+    try { localStorage.setItem(CODE_KEY, code) } catch { /* ignore */ }
+  }
+  return code
+}
 export function lastSynced(): number { try { return Number(localStorage.getItem(LAST_KEY) ?? 0) } catch { return 0 } }
 function setLast(t: number) { try { localStorage.setItem(LAST_KEY, String(t)) } catch { /* ignore */ } }
 
-async function derive(phrase: string) {
-  const base = await crypto.subtle.importKey('raw', enc.encode(phrase.normalize('NFKC').trim().toLowerCase()), 'PBKDF2', false, ['deriveBits'])
-  const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt: enc.encode('kept-sync-v1'), iterations: 200_000, hash: 'SHA-256' }, base, 512)
-  const bytes = new Uint8Array(bits)
-  const key = await crypto.subtle.importKey('raw', bytes.slice(0, 32), 'AES-GCM', false, ['encrypt', 'decrypt'])
-  const id = Array.from(bytes.slice(32)).map(b => b.toString(16).padStart(2, '0')).join('')
+async function sha256(s: string) { return new Uint8Array(await crypto.subtle.digest('SHA-256', enc.encode(s))) }
+
+async function derive(code: string) {
+  const id = Array.from(await sha256(`kept-id:${code}`)).map(b => b.toString(16).padStart(2, '0')).join('')
+  const key = await crypto.subtle.importKey('raw', await sha256(`kept-key:${code}`), 'AES-GCM', false, ['encrypt', 'decrypt'])
   return { key, id }
 }
 
@@ -37,10 +61,19 @@ async function decrypt(key: CryptoKey, iv: string, data: string) {
   return dec.decode(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: unb64(iv) }, key, unb64(data)))
 }
 
-/** Upload the current database. */
-export async function push(phrase = getPhrase()): Promise<void> {
-  if (!phrase) return
-  const { key, id } = await derive(phrase)
+type Remote = { iv: string; data: string; updatedAt: number }
+
+async function fetchRemote(code: string): Promise<Remote | null> {
+  const { id } = await derive(code)
+  const r = await fetch(`${SYNC_URL}?id=${id}`)
+  if (r.status === 404) return null
+  if (!r.ok) throw new Error(await r.text().catch(() => 'Could not reach the backup server.'))
+  return await r.json() as Remote
+}
+
+/** Upload the current database under this device's code. */
+export async function push(): Promise<void> {
+  const { key, id } = await derive(getCode())
   const snapshot = await exportAll()
   const updatedAt = Date.now()
   const payload = { ...(await encrypt(key, JSON.stringify(snapshot))), updatedAt }
@@ -49,53 +82,44 @@ export async function push(phrase = getPhrase()): Promise<void> {
   setLast(updatedAt)
 }
 
-/** Download and merge the backup stored under this phrase. Returns false if there is none. */
-export async function pull(phrase = getPhrase()): Promise<boolean> {
-  if (!phrase) return false
-  const { key, id } = await derive(phrase)
-  const r = await fetch(`${SYNC_URL}?id=${id}`)
-  if (r.status === 404) return false
-  if (!r.ok) throw new Error(await r.text().catch(() => 'Restore failed.'))
-  const remote = await r.json() as { iv: string; data: string; updatedAt: number }
+/** Replace everything on this phone with the backup stored under `code`. Returns false if there is none. */
+async function pull(code: string): Promise<boolean> {
+  const remote = await fetchRemote(code)
+  if (!remote) return false
+  const { key } = await derive(code)
   let text: string
-  try { text = await decrypt(key, remote.iv, remote.data) } catch { throw new Error('That phrase does not match the backup.') }
-  await importAll(JSON.parse(text))
+  try { text = await decrypt(key, remote.iv, remote.data) } catch { throw new Error('That backup could not be read.') }
+  await replaceAll(JSON.parse(text))
   setLast(remote.updatedAt)
   return true
 }
 
-/** Turn sync on: remember the phrase, restore anything already stored under it, then upload the merged result. */
-export async function enable(phrase: string): Promise<{ restored: boolean }> {
-  const clean = phrase.trim()
-  if (clean.length < 8) throw new Error('Use a phrase of at least 8 characters.')
-  const restored = await pull(clean)
-  try { localStorage.setItem(PHRASE_KEY, clean) } catch { /* ignore */ }
-  await push(clean)
-  return { restored }
+/** Adopt another phone's backup code: restore its data here and keep backing up under that code from now on. */
+export async function restore(input: string): Promise<void> {
+  const code = cleanCode(input)
+  if (!isCode(code)) throw new Error('A backup code is 16 letters and numbers, like ABCD-EFGH-JKLM-NPQR.')
+  if (code === getCode()) throw new Error('That is already this phone’s code.')
+  const found = await pull(code)
+  if (!found) throw new Error('No backup was found for that code.')
+  try { localStorage.setItem(CODE_KEY, code) } catch { /* ignore */ }
+  await push()
 }
 
-export function disable() { try { localStorage.removeItem(PHRASE_KEY); localStorage.removeItem(LAST_KEY) } catch { /* ignore */ } }
-
-/* ---- automatic sync: debounced push after any write, pull once per launch ---- */
+/* ---- automatic: debounced push after any write, pull on launch if the cloud copy is newer ---- */
 
 let timer: ReturnType<typeof setTimeout> | undefined
-export function scheduleSync(delayMs = 4000) {
-  if (!getPhrase()) return
+export function scheduleSync(delayMs = 1500) {
   clearTimeout(timer)
-  timer = setTimeout(() => { push().catch(() => { /* retried on next change */ }) }, delayMs)
+  timer = setTimeout(() => { push().catch(() => { /* retried on next change or launch */ }) }, delayMs)
 }
 
 export async function syncOnLaunch() {
-  if (!getPhrase()) return
+  try { localStorage.removeItem('kept-sync-phrase') } catch { /* old versions */ }
   try {
-    // Pull first in case another device (or a fresh reinstall) has newer data, then push the merged state.
-    const r = await fetch(`${SYNC_URL}?id=${(await derive(getPhrase()!)).id}`, { method: 'GET' })
-    if (r.ok) {
-      const remote = await r.json() as { updatedAt: number }
-      if (remote.updatedAt > lastSynced()) await pull()
-    }
-    const count = await db.verses.count()
-    if (count > 0) await push()
+    const code = getCode()
+    const remote = await fetchRemote(code)
+    if (remote && remote.updatedAt > lastSynced()) await pull(code)
+    else if ((await db.verses.count()) > 0 && !remote) await push()
   } catch { /* offline; try again next launch */ }
   document.addEventListener('visibilitychange', () => { if (document.hidden) push().catch(() => {}) })
 }

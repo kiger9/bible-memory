@@ -1,6 +1,7 @@
 // Vercel serverless function: fetches licensed translations server-side.
-//   GET /api/passage?ref=John%203:16-17&translation=esv|lsb&bn=43&ch=3&vs=16&ve=17
-//   (bn = 1-based book number Genesis..Revelation, ch/vs/ve = chapter and verse range; the browser parses the reference)
+//   GET /api/passage?ref=John%203:16-17&translation=nasb|esv|lsb&book=JHN&bn=43&ch=3&vs=16&ve=17
+//   (book = USFM book id, bn = 1-based book number Genesis..Revelation, ch/vs/ve = chapter and verse range; the browser parses the reference)
+// NASB: API.Bible (scripture.api.bible) with API_BIBLE_KEY; the NASB must be enabled on that key.
 // ESV: official api.esv.org when ESV_API_KEY is set; otherwise the public reader page at
 //      www.esv.org (interim, until the Crossway key arrives).
 // LSB: the Next.js data route behind read.lsbible.org (unofficial; personal use).
@@ -11,12 +12,12 @@ const UA = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/6
 
 export interface Passage { text: string; reference: string; verseEnd: number; source: string }
 
-export interface RefParams { ref: string; bookName: string; bn: number; ch: number; vs: number; ve: number }
+export interface RefParams { ref: string; bookName: string; book: string; bn: number; ch: number; vs: number; ve: number }
 
 export default async function handler(req: Req, res: Res) {
   const q = (k: string) => String(req.query[k] ?? '').trim()
   const ref = q('ref'), translation = q('translation')
-  const params: RefParams = { ref, bookName: ref.replace(/\s+\d+(:\d+(-\d+)?)?$/, ''), bn: Number(q('bn')), ch: Number(q('ch')), vs: Number(q('vs')) || 1, ve: Number(q('ve')) || 999 }
+  const params: RefParams = { ref, bookName: ref.replace(/\s+\d+(:\d+(-\d+)?)?$/, ''), book: q('book').toUpperCase(), bn: Number(q('bn')), ch: Number(q('ch')), vs: Number(q('vs')) || 1, ve: Number(q('ve')) || 999 }
   if (!ref) return res.status(400).send('Missing ref')
   try {
     const out = await fetchProxied(params, translation)
@@ -31,7 +32,52 @@ export default async function handler(req: Req, res: Res) {
 export async function fetchProxied(p: RefParams, translation: string): Promise<Passage | null> {
   if (translation === 'esv') return process.env.ESV_API_KEY ? fetchEsvApi(p.ref, process.env.ESV_API_KEY) : fetchEsvSite(p)
   if (translation === 'lsb') return fetchLsb(p.ref)
+  if (translation === 'nasb') return fetchNasb(p)
   return null
+}
+
+/* ---------------- NASB (API.Bible) ----------------
+   The NASB is licensed to API.Bible by The Lockman Foundation. Needs API_BIBLE_KEY, with the NASB
+   enabled on that key (some Bibles need the publisher's approval in the api.bible dashboard). */
+
+const API_BIBLE = 'https://api.scripture.api.bible/v1'
+let nasbBibleId: string | null = null
+
+async function getNasbBibleId(key: string): Promise<string> {
+  if (nasbBibleId) return nasbBibleId
+  const r = await fetch(`${API_BIBLE}/bibles?language=eng`, { headers: { 'api-key': key } })
+  if (r.status === 401 || r.status === 403) throw new Error('The API.Bible key was rejected. Check API_BIBLE_KEY on the server.')
+  if (!r.ok) throw new Error(`API.Bible returned ${r.status}`)
+  const { data = [] } = await r.json() as { data?: { id: string; abbreviation?: string; name?: string }[] }
+  const abbr = (b: { abbreviation?: string }) => (b.abbreviation ?? '').toUpperCase().replace(/[^A-Z0-9]/g, '')
+  const pick = data.find(b => abbr(b) === 'NASB')
+    ?? data.find(b => abbr(b).startsWith('NASB'))
+    ?? data.find(b => /new american standard/i.test(b.name ?? ''))
+  if (!pick) throw new Error('The NASB is not enabled on this API.Bible key. Request it under Bibles in your api.bible dashboard.')
+  nasbBibleId = pick.id
+  return pick.id
+}
+
+async function fetchNasb(p: RefParams): Promise<Passage> {
+  const key = process.env.API_BIBLE_KEY
+  if (!key) throw new Error('The NASB needs an API.Bible key on the server (API_BIBLE_KEY). Set it in Vercel and redeploy.')
+  if (!p.book || !p.ch) throw new Error('Missing book/chapter for NASB lookup.')
+  const bibleId = await getNasbBibleId(key)
+  const whole = p.ve >= 999
+  const passageId = whole ? `${p.book}.${p.ch}` : p.ve > p.vs ? `${p.book}.${p.ch}.${p.vs}-${p.book}.${p.ch}.${p.ve}` : `${p.book}.${p.ch}.${p.vs}`
+  const params = new URLSearchParams({
+    'content-type': 'text', 'include-notes': 'false', 'include-titles': 'false', 'include-chapter-numbers': 'false',
+    'include-verse-numbers': 'false', 'include-verse-spans': 'false', 'use-org-id': 'false',
+  })
+  const r = await fetch(`${API_BIBLE}/bibles/${bibleId}/passages/${passageId}?${params}`, { headers: { 'api-key': key } })
+  if (r.status === 404) throw new Error('That passage was not found in the NASB.')
+  if (!r.ok) throw new Error(`API.Bible returned ${r.status}`)
+  const { data } = await r.json() as { data?: { content?: string; reference?: string; verseCount?: number } }
+  const text = clean((data?.content ?? '').replace(/\[\d+\]/g, ' '))
+  if (!text) throw new Error('That passage was not found in the NASB.')
+  const verseCount = data?.verseCount ?? 1
+  const verseEnd = whole ? verseCount : p.vs + verseCount - 1
+  return { text, reference: data?.reference?.trim() || p.ref, verseEnd, source: 'api.bible' }
 }
 
 /* ---------------- ESV (official API) ---------------- */

@@ -3,15 +3,16 @@ import type { ParsedRef } from './refs'
 import { BOOKS } from './books'
 
 export const TRANSLATIONS: Translation[] = [
+  { id: 'nasb', name: 'New American Standard Bible', abbr: 'NASB', source: 'proxy', attribution: 'Scripture quotations taken from the (NASB®) New American Standard Bible®, Copyright © 1960, 1971, 1977, 1995, 2020 by The Lockman Foundation. Used by permission. All rights reserved. lockman.org' },
+  { id: 'esv',  name: 'English Standard Version', abbr: 'ESV', source: 'proxy', attribution: 'Scripture quotations are from the ESV® Bible (The Holy Bible, English Standard Version®), © 2001 by Crossway. Used by permission. All rights reserved.' },
+  { id: 'lsb',  name: 'Legacy Standard Bible', abbr: 'LSB', source: 'proxy', attribution: 'Scripture quotations taken from the (LSB®) Legacy Standard Bible®, Copyright © 2021 by The Lockman Foundation. Used by permission. All rights reserved. Managed in partnership with Three Sixteen Publishing Inc. LSBible.org' },
   { id: 'web',  name: 'World English Bible', abbr: 'WEB', source: 'direct', attribution: 'World English Bible, public domain.' },
   { id: 'kjv',  name: 'King James Version', abbr: 'KJV', source: 'direct', attribution: 'King James Version, public domain.' },
   { id: 'asv',  name: 'American Standard Version', abbr: 'ASV', source: 'direct', attribution: 'American Standard Version, public domain.' },
   { id: 'bbe',  name: 'Bible in Basic English', abbr: 'BBE', source: 'direct', attribution: 'Bible in Basic English, public domain.' },
   { id: 'darby', name: 'Darby Translation', abbr: 'DARBY', source: 'direct', attribution: 'Darby Translation, public domain.' },
   { id: 'ylt',  name: "Young's Literal Translation", abbr: 'YLT', source: 'direct', attribution: "Young's Literal Translation, public domain." },
-  { id: 'esv',  name: 'English Standard Version', abbr: 'ESV', source: 'proxy', attribution: 'Scripture quotations are from the ESV® Bible (The Holy Bible, English Standard Version®), © 2001 by Crossway. Used by permission. All rights reserved.' },
-  { id: 'lsb',  name: 'Legacy Standard Bible', abbr: 'LSB', source: 'proxy', attribution: 'Scripture quotations taken from the (LSB®) Legacy Standard Bible®, Copyright © 2021 by The Lockman Foundation. Used by permission. All rights reserved. Managed in partnership with Three Sixteen Publishing Inc. LSBible.org' },
-  { id: 'custom', name: 'Paste my own text (NIV, NLT, NASB, CSB…)', abbr: 'Own text', source: 'manual', attribution: 'Text entered by you from your own Bible. Stored only on this device.' },
+  { id: 'custom', name: 'Paste my own text (NIV, NLT, CSB…)', abbr: 'Own text', source: 'manual', attribution: 'Text entered by you from your own Bible. Stored only on this device.' },
 ]
 
 export function getTranslation(id: TranslationId): Translation {
@@ -34,7 +35,7 @@ export async function fetchPassage(ref: ParsedRef, translation: TranslationId): 
     return { text, reference: data.reference, verseEnd: data.verses[data.verses.length - 1].verse }
   }
   const params = new URLSearchParams({
-    ref: q, translation: t.id, bn: String(BOOKS.findIndex(b => b.id === ref.book.id) + 1),
+    ref: q, translation: t.id, book: ref.book.id, bn: String(BOOKS.findIndex(b => b.id === ref.book.id) + 1),
     ch: String(ref.chapter), vs: String(ref.verseStart), ve: String(ref.verseEnd),
   })
   const res = await fetch(`/api/passage?${params}`)

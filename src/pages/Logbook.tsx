@@ -3,7 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { Link } from 'react-router-dom'
 import { db, exportAll, importAll } from '../lib/db'
 import Header from '../components/Header'
-import { getPhrase, lastSynced, enable, disable, push } from '../lib/sync'
+import { getCode, formatCode, lastSynced, restore, push, scheduleSync } from '../lib/sync'
 
 export default function Logbook() {
   const verses = useLiveQuery(() => db.verses.orderBy('createdAt').toArray(), [])
@@ -18,6 +18,7 @@ export default function Logbook() {
   async function doImport(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0]; if (!f) return
     await importAll(JSON.parse(await f.text()))
+    scheduleSync(500)
   }
 
   return (
@@ -38,7 +39,7 @@ export default function Logbook() {
           </Link>
         )
       })}
-      <SyncPanel />
+      <BackupPanel />
       <section className="actions">
         <button className="button ghost" onClick={doExport}>Export file</button>
         <label className="button ghost">Import file<input type="file" accept="application/json" onChange={doImport} hidden /></label>
@@ -47,45 +48,44 @@ export default function Logbook() {
   )
 }
 
-function SyncPanel() {
-  const [phrase, setPhrase] = useState('')
+function BackupPanel() {
+  const [input, setInput] = useState('')
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState('')
-  const [on, setOn] = useState(!!getPhrase())
-  const last = lastSynced()
+  const [last, setLast] = useState(lastSynced())
+  const code = formatCode(getCode())
 
-  async function turnOn(e: React.FormEvent) {
-    e.preventDefault(); setBusy(true); setMsg('')
-    try {
-      const { restored } = await enable(phrase)
-      setOn(true); setPhrase('')
-      setMsg(restored ? 'Restored your verses and progress from this phrase. Sync is on.' : 'Sync is on. Keep your phrase somewhere safe.')
-    } catch (err) { setMsg((err as Error).message) }
+  async function backupNow() {
+    setBusy(true); setMsg('')
+    try { await push(); setLast(lastSynced()); setMsg('Backed up just now.') }
+    catch (err) { setMsg((err as Error).message) }
     finally { setBusy(false) }
   }
-  async function syncNow() { setBusy(true); setMsg(''); try { await push(); setMsg('Backed up just now.') } catch (err) { setMsg((err as Error).message) } finally { setBusy(false) } }
+  async function doRestore(e: React.FormEvent) {
+    e.preventDefault(); setBusy(true); setMsg('')
+    try { await restore(input); setInput(''); setLast(lastSynced()); setMsg('Restored. This phone now shares that backup.') }
+    catch (err) { setMsg((err as Error).message) }
+    finally { setBusy(false) }
+  }
 
   return (
     <section className="sync">
       <h2 className="section-title">Backup</h2>
-      {on ? (
-        <>
-          <p className="muted">Sync is on. Your verses and progress are encrypted with your phrase and backed up after every practice.{last ? ` Last backup ${new Date(last).toLocaleString()}.` : ''}</p>
-          <div className="actions">
-            <button className="button ghost" onClick={syncNow} disabled={busy}>{busy ? 'Backing up…' : 'Back up now'}</button>
-            <button className="button ghost" onClick={() => { disable(); setOn(false); setMsg('Sync is off. Your data stays on this phone.') }}>Turn off</button>
-          </div>
-        </>
-      ) : (
-        <form className="form" onSubmit={turnOn}>
-          <p className="muted">Choose a sync phrase and keep it somewhere safe. If you delete or reinstall the app, enter the same phrase here and everything comes back.</p>
+      <p className="muted">Your verses and progress are backed up automatically after every change, encrypted so only this phone can read them.{last ? ` Last backup ${new Date(last).toLocaleString()}.` : ''}</p>
+      <p className="muted">This phone’s backup code is <strong className="code">{code}</strong>. On a new phone, or after reinstalling the app, enter it below and everything comes back.</p>
+      <div className="actions">
+        <button className="button ghost" onClick={backupNow} disabled={busy}>{busy ? 'Working…' : 'Back up now'}</button>
+      </div>
+      <details className="restore">
+        <summary>Restore from another phone</summary>
+        <form className="form" onSubmit={doRestore}>
           <label className="field">
-            <span>Sync phrase</span>
-            <input value={phrase} onChange={e => setPhrase(e.target.value)} placeholder="e.g. hidden in my heart 119" autoCapitalize="none" autoComplete="off" />
+            <span>Backup code from the other phone</span>
+            <input value={input} onChange={e => setInput(e.target.value)} placeholder="ABCD-EFGH-JKLM-NPQR" autoCapitalize="characters" autoComplete="off" spellCheck={false} />
           </label>
-          <button className="button primary" disabled={busy || phrase.trim().length < 8}>{busy ? 'Working…' : 'Turn on sync'}</button>
+          <button className="button ghost" disabled={busy || input.trim().length < 16}>{busy ? 'Working…' : 'Restore'}</button>
         </form>
-      )}
+      </details>
       {msg && <p className="muted" role="status">{msg}</p>}
     </section>
   )

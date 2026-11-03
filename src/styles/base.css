@@ -98,3 +98,9 @@ a { color: var(--accent); }
 
 .sync { margin-top: var(--sp-6); padding-top: var(--sp-4); border-top: 1px solid var(--rule); }
 .section-title { font-family: var(--font-serif); font-weight: 500; font-size: var(--fs-h3); margin: 0 0 var(--sp-2); }
+
+.header-action { display: flex; gap: var(--sp-2); align-items: center; }
+.button.danger { color: var(--miss); border-color: var(--miss); background: transparent; }
+.code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .06em; color: var(--ink); user-select: all; -webkit-user-select: all; white-space: nowrap; }
+.restore { margin-top: var(--sp-3); }
+.restore summary { color: var(--ink-3); font-size: var(--fs-caption); cursor: pointer; min-height: var(--tap); display: flex; align-items: center; }
