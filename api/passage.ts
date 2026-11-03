@@ -43,13 +43,14 @@ export async function fetchProxied(p: RefParams, translation: string): Promise<P
 
 const API_BIBLE = 'https://api.scripture.api.bible/v1'
 
-interface ApiBibleSpec { abbr: string; name: RegExp; label: string }
+interface ApiBibleSpec { abbr: string; name: RegExp; exclude?: RegExp; label: string }
 const API_BIBLES: Record<string, ApiBibleSpec> = {
   nasb: { abbr: 'NASB', name: /new american standard/i, label: 'NASB' },
-  niv:  { abbr: 'NIV',  name: /new international version/i, label: 'NIV' },
-  kjv:  { abbr: 'KJV',  name: /king james version/i, label: 'KJV' },
+  niv:  { abbr: 'NIV',  name: /new international version/i, exclude: /NIVUK|anglici[sz]ed|reader/i, label: 'NIV' },
+  kjv:  { abbr: 'KJV',  name: /king james|authori[sz]ed version/i, exclude: /NKJV|new king james|21st century|KJ21|AKJV|american king james/i, label: 'KJV' },
 }
 const bibleIds: Record<string, string> = {}
+const bibleNames: Record<string, string> = {}
 let bibleList: { id: string; abbreviation?: string; name?: string; language?: { id?: string } }[] | null = null
 
 async function listBibles(key: string) {
@@ -63,13 +64,15 @@ async function listBibles(key: string) {
 
 async function getBibleId(key: string, translation: string, spec: ApiBibleSpec): Promise<string> {
   if (bibleIds[translation]) return bibleIds[translation]
-  const data = await listBibles(key)
   const abbr = (b: { abbreviation?: string }) => (b.abbreviation ?? '').toUpperCase().replace(/[^A-Z0-9]/g, '')
+  const data = (await listBibles(key)).filter(b => !spec.exclude || !(spec.exclude.test(b.name ?? '') || spec.exclude.test(b.abbreviation ?? '')))
   const pick = data.find(b => abbr(b) === spec.abbr)
     ?? data.find(b => abbr(b).startsWith(spec.abbr))
+    ?? data.find(b => abbr(b).includes(spec.abbr))
     ?? data.find(b => spec.name.test(b.name ?? ''))
   if (!pick) throw new Error(`The ${spec.label} is not enabled on this API.Bible key. Request it under Bibles in your api.bible dashboard.`)
   bibleIds[translation] = pick.id
+  bibleNames[translation] = `${pick.name ?? ''} (${pick.abbreviation ?? ''})`.trim()
   return pick.id
 }
 
@@ -92,7 +95,7 @@ async function fetchApiBible(p: RefParams, translation: string, spec: ApiBibleSp
   if (!text) throw new Error(`That passage was not found in the ${spec.label}.`)
   const verseCount = data?.verseCount ?? 1
   const verseEnd = whole ? verseCount : p.vs + verseCount - 1
-  return { text, reference: data?.reference?.trim() || p.ref, verseEnd, source: 'api.bible' }
+  return { text, reference: data?.reference?.trim() || p.ref, verseEnd, source: `api.bible: ${bibleNames[translation] ?? bibleId}` }
 }
 
 /* ---------------- helpers ---------------- */
