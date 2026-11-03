@@ -36,6 +36,7 @@ export default function Splash() {
         <p>A devotional app for personal use.</p>
         <p>{getTranslation('nasb').attribution}</p>
         <p>{getTranslation('niv').attribution}</p>
+        <p>{getTranslation('nkjv').attribution}</p>
         <p>Scripture text provided by <a href="https://api.bible" target="_blank" rel="noopener">API.Bible</a>.</p>
       </div>
     </div>

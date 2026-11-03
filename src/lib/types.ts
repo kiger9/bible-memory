@@ -1,4 +1,4 @@
-export type TranslationId = 'nasb' | 'niv' | 'web' | 'kjv' | 'asv' | 'bbe' | 'darby' | 'ylt' | 'esv' | 'lsb' | 'custom'
+export type TranslationId = 'nasb' | 'niv' | 'nkjv' | 'web' | 'kjv' | 'asv' | 'bbe' | 'darby' | 'ylt' | 'esv' | 'lsb' | 'custom'
 
 export interface Translation {
   id: TranslationId

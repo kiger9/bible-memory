@@ -1,7 +1,7 @@
 // Vercel serverless function: fetches licensed translations server-side.
-//   GET /api/passage?ref=John%203:16-17&translation=nasb|esv|lsb|niv|kjv&book=JHN&bn=43&ch=3&vs=16&ve=17
+//   GET /api/passage?ref=John%203:16-17&translation=nasb|esv|lsb|niv|kjv|nkjv&book=JHN&bn=43&ch=3&vs=16&ve=17
 //   (book = USFM book id, bn = 1-based book number Genesis..Revelation, ch/vs/ve = chapter and verse range; the browser parses the reference)
-// NASB, NIV, KJV: API.Bible (scripture.api.bible) with API_BIBLE_KEY; each Bible must be enabled on that key.
+// NASB, NIV, KJV, NKJV: API.Bible (scripture.api.bible) with API_BIBLE_KEY; each Bible must be enabled on that key.
 // ESV: official api.esv.org when ESV_API_KEY is set; otherwise the public reader page at
 //      www.esv.org (interim, until the Crossway key arrives).
 // LSB: the Next.js data route behind read.lsbible.org (unofficial; personal use).
@@ -37,7 +37,7 @@ export async function fetchProxied(p: RefParams, translation: string): Promise<P
   return null
 }
 
-/* ---------------- API.Bible (NASB, NIV, KJV) ----------------
+/* ---------------- API.Bible (NASB, NIV, KJV, NKJV) ----------------
    Licensed texts via scripture.api.bible. Needs API_BIBLE_KEY, with each Bible enabled on that key
    (NASB and NIV need the publisher's approval in the api.bible dashboard). */
 
@@ -48,6 +48,7 @@ const API_BIBLES: Record<string, ApiBibleSpec> = {
   nasb: { abbr: 'NASB', name: /new american standard/i, label: 'NASB' },
   niv:  { abbr: 'NIV',  name: /new international version/i, exclude: /NIVUK|anglici[sz]ed|reader/i, label: 'NIV' },
   kjv:  { abbr: 'KJV',  name: /king james|authori[sz]ed version/i, exclude: /NKJV|new king james|21st century|KJ21|AKJV|american king james/i, label: 'KJV' },
+  nkjv: { abbr: 'NKJV', name: /new king james/i, label: 'NKJV' },
 }
 const bibleIds: Record<string, string> = {}
 const bibleNames: Record<string, string> = {}
