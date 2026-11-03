@@ -49,3 +49,10 @@ export function review(state: ReviewState, grade: Grade, now = new Date()): Revi
   const result = f.next(toCard(state), now, grade)
   return toState(state.verseId, result.card)
 }
+
+/** One step harsher, used when the person could not say where the verse is from. */
+export function penalize(grade: Grade): Grade {
+  if (grade === Rating.Easy) return Rating.Good
+  if (grade === Rating.Good) return Rating.Hard
+  return Rating.Again
+}

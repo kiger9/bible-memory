@@ -9,9 +9,9 @@ export default function Settings() {
   const [settings, setSettings] = useState<SettingsRow | null>(null)
   useEffect(() => { getSettings().then(setSettings) }, [])
 
-  async function setDefaultTranslation(defaultTranslation: SettingsRow['defaultTranslation']) {
+  async function update(patch: Partial<SettingsRow>) {
     if (!settings) return
-    const next = { ...settings, defaultTranslation }
+    const next = { ...settings, ...patch }
     setSettings(next)
     await db.settings.put(next)
     scheduleSync(500)
@@ -34,9 +34,18 @@ export default function Settings() {
         {settings && (
           <label className="field">
             <span>Default translation</span>
-            <select value={settings.defaultTranslation} onChange={e => setDefaultTranslation(e.target.value as SettingsRow['defaultTranslation'])}>
+            <select value={settings.defaultTranslation} onChange={e => update({ defaultTranslation: e.target.value as SettingsRow['defaultTranslation'] })}>
               {TRANSLATIONS.map(t => <option key={t.id} value={t.id}>{t.abbr} — {t.name}</option>)}
             </select>
+          </label>
+        )}
+        {settings && (
+          <label className="field">
+            <span>New verses per day</span>
+            <select value={settings.dailyGoal} onChange={e => update({ dailyGoal: Number(e.target.value) })}>
+              {[1, 2, 3, 5, 10].map(n => <option key={n} value={n}>{n}</option>)}
+            </select>
+            <span className="muted">Reviews always show on Today; this only paces verses you have not started.</span>
           </label>
         )}
       </section>

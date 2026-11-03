@@ -22,7 +22,7 @@ export default function Verses() {
 
   function stats(v: Verse) {
     if (!attempts || !reviews) return ' '
-    const mine = attempts.filter(a => a.verseId === v.id && a.mode !== 'read')
+    const mine = attempts.filter(a => a.verseId === v.id && a.mode !== 'read' && a.mode !== 'ref')
     const best = mine.reduce((m, a) => Math.max(m, a.accuracy), 0)
     const r = reviews.find(r => r.verseId === v.id)
     if (mine.length === 0) return 'Not practised yet'

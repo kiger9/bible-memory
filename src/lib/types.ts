@@ -38,7 +38,7 @@ export interface ThoughtChunk {
   keyword?: string           // a single anchor word or image for the phrase
 }
 
-export type Mode = 'read' | 'type' | 'speak' | 'firstletter' | 'quiz'
+export type Mode = 'read' | 'type' | 'speak' | 'firstletter' | 'ref' | 'quiz'
 
 export interface Attempt {
   id?: number
