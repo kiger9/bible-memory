@@ -1,4 +1,4 @@
-import { findBook, type Book } from './books'
+import { findBook, BOOKS, type Book } from './books'
 
 export interface ParsedRef {
   book: Book
@@ -31,4 +31,13 @@ export function parseReference(input: string): ParsedRef | { error: string } {
   if (chapterEnd === chapter && verseEnd < verseStart) return { error: 'The verse range is backwards.' }
   const range = !vsRaw ? '' : chapterEnd !== chapter ? `:${verseStart}-${chapterEnd}:${verseEnd}` : `:${verseStart}${verseEnd !== verseStart ? `-${verseEnd}` : ''}`
   return { book, chapter, verseStart, verseEnd, chapterEnd, canonical: `${book.name} ${chapter}${range}` }
+}
+
+/** Rebuild a reference from a stored verse's fields (for refetching). */
+export function refFromVerse(v: { bookId: string; chapter: number; verseStart: number; verseEnd: number; chapterEnd?: number }): ParsedRef | null {
+  const book = BOOKS.find(b => b.id === v.bookId)
+  if (!book) return null
+  const chapterEnd = v.chapterEnd ?? v.chapter
+  const range = chapterEnd !== v.chapter ? `:${v.verseStart}-${chapterEnd}:${v.verseEnd}` : `:${v.verseStart}${v.verseEnd !== v.verseStart ? `-${v.verseEnd}` : ''}`
+  return { book, chapter: v.chapter, verseStart: v.verseStart, verseEnd: v.verseEnd, chapterEnd, canonical: `${book.name} ${v.chapter}${range}` }
 }

@@ -21,7 +21,7 @@ export function getTranslation(id: TranslationId): Translation {
   return TRANSLATIONS.find(t => t.id === id) ?? TRANSLATIONS[0]
 }
 
-export interface FetchedPassage { text: string; reference: string; verseEnd: number }
+export interface FetchedPassage { text: string; reference: string; verseEnd: number; verses?: { n: number; text: string }[] }
 
 /** Fetch passage text. Public-domain translations go straight to bible-api.com; keyed ones via /api. */
 export async function fetchPassage(ref: ParsedRef, translation: TranslationId): Promise<FetchedPassage> {
@@ -33,8 +33,8 @@ export async function fetchPassage(ref: ParsedRef, translation: TranslationId): 
     if (!res.ok) throw new Error(res.status === 404 ? 'That passage was not found.' : `Bible API error (${res.status}).`)
     const data = await res.json() as { verses: { verse: number; text: string }[]; reference: string }
     if (!data.verses?.length) throw new Error('That passage was not found.')
-    const text = data.verses.map(v => v.text.replace(/\s+/g, ' ').trim()).join(' ')
-    return { text, reference: data.reference, verseEnd: data.verses[data.verses.length - 1].verse }
+    const verses = data.verses.map(v => ({ n: v.verse, text: v.text.replace(/\s+/g, ' ').trim() }))
+    return { text: verses.map(v => v.text).join(' '), reference: data.reference, verseEnd: verses[verses.length - 1].n, verses }
   }
   const params = new URLSearchParams({
     ref: q, translation: t.id, book: ref.book.id, bn: String(BOOKS.findIndex(b => b.id === ref.book.id) + 1),

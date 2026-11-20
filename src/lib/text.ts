@@ -50,3 +50,30 @@ export function speechAccuracy(expected: string[], spoken: string): number {
   const { accuracy } = wordDiff(expected, tokenize(spoken))
   return accuracy
 }
+
+/** Word index where each verse begins, given per-verse text. */
+export function verseStartsFrom(verses: { n: number; text: string }[]): { n: number; word: number }[] {
+  const out: { n: number; word: number }[] = []
+  let i = 0
+  for (const v of verses) { out.push({ n: v.n, word: i }); i += tokenize(v.text).length }
+  return out
+}
+
+/** For pasted text like "16 For God so loved… 17 For God did not…": strip leading verse numbers and return the split. */
+export function splitPastedVerses(raw: string, first: number): { text: string; verses: { n: number; text: string }[] } | null {
+  const s = raw.replace(/\s+/g, ' ').trim()
+  const parts: { n: number; text: string }[] = []
+  let n = first, rest = s
+  while (true) {
+    const m = rest.match(new RegExp(`^(?:\\[?${n}\\]?|${n}[.:]?)\\s+`))
+    if (!m) break
+    rest = rest.slice(m[0].length)
+    const next = rest.search(new RegExp(`\\s(?:\\[?${n + 1}\\]?|${n + 1}[.:]?)\\s`))
+    const chunk = next >= 0 ? rest.slice(0, next) : rest
+    parts.push({ n, text: chunk.trim() })
+    if (next < 0) break
+    rest = rest.slice(next + 1); n++
+  }
+  if (parts.length < 1 || parts[0].text === '') return null
+  return { text: parts.map(p => p.text).join(' '), verses: parts }
+}

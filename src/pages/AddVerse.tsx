@@ -4,6 +4,7 @@ import { getSettings } from '../lib/db'
 import { parseReference } from '../lib/refs'
 import { TRANSLATIONS, fetchPassage, getTranslation } from '../lib/bible'
 import { addVerse } from '../lib/verses'
+import { verseStartsFrom, splitPastedVerses } from '../lib/text'
 import type { TranslationId } from '../lib/types'
 import Header from '../components/Header'
 import VerseText from '../components/VerseText'
@@ -12,7 +13,7 @@ export default function AddVerse() {
   const nav = useNavigate()
   const [ref, setRef] = useState('')
   const [translation, setTranslation] = useState<TranslationId>('web')
-  const [preview, setPreview] = useState<{ text: string; reference: string; verseEnd: number } | null>(null)
+  const [preview, setPreview] = useState<{ text: string; reference: string; verseEnd: number; verses?: { n: number; text: string }[] } | null>(null)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const [ownText, setOwnText] = useState('')
@@ -26,9 +27,11 @@ export default function AddVerse() {
     const parsed = parseReference(ref)
     if ('error' in parsed) { setError(parsed.error); return }
     if (isManual) {
-      const text = ownText.replace(/\s+/g, ' ').trim()
-      if (!text) { setError('Paste the verse text from your Bible.'); return }
-      setPreview({ text, reference: parsed.canonical, verseEnd: parsed.verseEnd === 999 ? parsed.verseStart : parsed.verseEnd })
+      const raw = ownText.replace(/\s+/g, ' ').trim()
+      if (!raw) { setError('Paste the verse text from your Bible.'); return }
+      const split = splitPastedVerses(raw, parsed.verseStart)
+      const verseEnd = split ? split.verses[split.verses.length - 1].n : parsed.verseEnd === 999 ? parsed.verseStart : parsed.verseEnd
+      setPreview({ text: split ? split.text : raw, reference: `${parsed.book.name} ${parsed.chapter}:${parsed.verseStart}${verseEnd !== parsed.verseStart ? `-${verseEnd}` : ''}`, verseEnd, verses: split?.verses })
       return
     }
     setBusy(true)
@@ -78,7 +81,7 @@ export default function AddVerse() {
       </form>
       {preview && (
         <section>
-          <VerseText text={preview.text} reference={`${preview.reference} (${isManual ? ownLabel : getTranslation(translation).abbr})`} />
+          <VerseText text={preview.text} reference={`${preview.reference} (${isManual ? ownLabel : getTranslation(translation).abbr})`} verseStarts={preview.verses ? verseStartsFrom(preview.verses) : undefined} />
           <button className="button primary" onClick={save} disabled={busy}>{busy ? 'Saving…' : 'Memorize this'}</button>
           <p className="attribution">{getTranslation(translation).attribution}</p>
           {getTranslation(translation).provider === 'api.bible' && <p className="attribution">Scripture text provided by <a href="https://api.bible" target="_blank" rel="noopener">API.Bible</a>.</p>}

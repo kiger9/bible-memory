@@ -10,7 +10,7 @@ type Res = { status: (n: number) => Res; json: (b: unknown) => void; send: (b: s
 
 const UA = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1'
 
-export interface Passage { text: string; reference: string; verseEnd: number; source: string }
+export interface Passage { text: string; reference: string; verseEnd: number; source: string; verses?: { n: number; text: string }[] }
 
 export interface RefParams { ref: string; bookName: string; book: string; bn: number; ch: number; vs: number; ve: number; ce: number }
 
@@ -90,34 +90,42 @@ async function fetchApiBible(p: RefParams, translation: string, spec: ApiBibleSp
     : p.ve > p.vs ? `${p.book}.${p.ch}.${p.vs}-${p.book}.${p.ch}.${p.ve}` : `${p.book}.${p.ch}.${p.vs}`
   const params = new URLSearchParams({
     'content-type': 'text', 'include-notes': 'false', 'include-titles': 'false', 'include-chapter-numbers': 'false',
-    'include-verse-numbers': 'false', 'include-verse-spans': 'false', 'use-org-id': 'false',
+    'include-verse-numbers': 'true', 'include-verse-spans': 'false', 'use-org-id': 'false',
   })
   const r = await fetch(`${API_BIBLE}/bibles/${bibleId}/passages/${passageId}?${params}`, { headers: { 'api-key': key } })
   if (r.status === 404) throw new Error(`That passage was not found in the ${spec.label}.`)
   if (!r.ok) throw new Error(`API.Bible returned ${r.status}`)
   const { data } = await r.json() as { data?: { content?: string; reference?: string; verseCount?: number } }
-  const text = clean((data?.content ?? '').replace(/\[\d+\]/g, ' ').replace(/¶/g, ' '))
+  const raw = clean((data?.content ?? '').replace(/¶/g, ' '))
+  // With verse numbers on, content reads "[16] For God… [17] For God…"
+  const verses: { n: number; text: string }[] = []
+  for (const m of raw.matchAll(/\[(\d+)\]\s*([^[]+)/g)) { const t = clean(m[2]); if (t) verses.push({ n: Number(m[1]), text: t }) }
+  const text = verses.length ? verses.map(v => v.text).join(' ') : clean(raw.replace(/\[\d+\]/g, ' '))
   if (!text) throw new Error(`That passage was not found in the ${spec.label}.`)
   const verseCount = data?.verseCount ?? 1
   const verseEnd = whole ? verseCount : cross ? p.ve : p.vs + verseCount - 1
-  return { text, reference: data?.reference?.trim() || p.ref, verseEnd, source: `api.bible: ${bibleNames[translation] ?? bibleId}` }
+  return { text, reference: data?.reference?.trim() || p.ref, verseEnd, source: `api.bible: ${bibleNames[translation] ?? bibleId}`, verses: verses.length ? verses : undefined }
 }
 
 /* ---------------- ESV (official API) ---------------- */
 
 async function fetchEsvApi(ref: string, key: string): Promise<Passage> {
   const params = new URLSearchParams({
-    q: ref, 'include-headings': 'false', 'include-footnotes': 'false', 'include-verse-numbers': 'false',
-    'include-short-copyright': 'false', 'include-passage-references': 'false', 'include-first-verse-numbers': 'false',
+    q: ref, 'include-headings': 'false', 'include-footnotes': 'false', 'include-verse-numbers': 'true',
+    'include-short-copyright': 'false', 'include-passage-references': 'false', 'include-first-verse-numbers': 'true',
     'include-selahs': 'true', 'indent-paragraphs': '0', 'indent-poetry': 'false',
   })
   const r = await fetch(`https://api.esv.org/v3/passage/text/?${params}`, { headers: { Authorization: `Token ${key}` } })
   if (!r.ok) throw new Error(`ESV API error ${r.status}`)
   const data = await r.json() as { passages: string[]; canonical: string; passage_meta: { end: number[] }[] }
-  const text = clean(data.passages?.[0] ?? '')
-  if (!text) throw new Error('That passage was not found.')
+  const raw = clean(data.passages?.[0] ?? '')
+  if (!raw) throw new Error('That passage was not found.')
+  // Verse numbers come back in brackets, e.g. "[16] For God… [17] For God…"
+  const verses: { n: number; text: string }[] = []
+  for (const m of raw.matchAll(/\[(\d+)\]\s*([^[]+)/g)) verses.push({ n: Number(m[1]), text: clean(m[2]) })
+  const text = verses.length ? verses.map(v => v.text).join(' ') : raw.replace(/\[\d+\]\s*/g, '')
   const endPacked = data.passage_meta?.[0]?.end?.[0] ?? 0
-  return { text, reference: data.canonical, verseEnd: endPacked % 1000, source: 'api.esv.org' }
+  return { text, reference: data.canonical, verseEnd: endPacked % 1000, source: 'api.esv.org', verses: verses.length ? verses : undefined }
 }
 
 /* ---------------- ESV (reader page, interim) ----------------
@@ -155,7 +163,7 @@ async function fetchEsvSite(p: RefParams): Promise<Passage> {
   const reference = last.c !== p.ch
     ? `${p.bookName} ${p.ch}:${p.vs}-${last.c}:${verseEnd}`
     : `${p.bookName} ${p.ch}:${p.vs}${verseEnd !== p.vs ? `-${verseEnd}` : ''}`
-  return { text: clean(verses.map(v => v.text).join(' ')), reference, verseEnd, source: 'www.esv.org' }
+  return { text: clean(verses.map(v => v.text).join(' ')), reference, verseEnd, source: 'www.esv.org', verses }
 }
 
 /* ---------------- LSB ----------------
@@ -194,7 +202,7 @@ async function fetchLsb(ref: string, retry = true): Promise<Passage> {
   }
   const passages = data.pageProps?.passages ?? []
   if (!passages.length) throw new Error('That passage was not found in the LSB.')
-  const verses: string[] = []
+  const verses: { n: number; text: string }[] = []
   let verseEnd = 0
   for (const p of passages) {
     const html = p.passageHtml ?? ''
@@ -206,13 +214,13 @@ async function fetchLsb(ref: string, retry = true): Promise<Passage> {
         .replace(/<b\b[^>]*class="[^"]*chapnum[^"]*"[^>]*>[\s\S]*?<\/b>/gi, ' ')
         .replace(/<div\b[^>]*class="[^"]*psalm-title[^"]*"[^>]*>[\s\S]*?<\/div>/gi, ' ')
         .replace(/<\/span>/g, ' ').replace(/<[^>]+>/g, '')))
-      if (text) verses.push(text)
+      if (text) verses.push({ n: verseEnd, text })
     }
     if (!verseEnd && p.to?.vn) verseEnd = p.to.vn
   }
-  const text = clean(verses.join(' '))
+  const text = clean(verses.map(v => v.text).join(' '))
   if (!text) throw new Error('Could not read the LSB passage.')
-  return { text, reference: passages[0]?.title?.trim() || ref, verseEnd, source: 'read.lsbible.org' }
+  return { text, reference: passages[0]?.title?.trim() || ref, verseEnd, source: 'read.lsbible.org', verses }
 }
 
 interface LsbPassage { title?: string; passageHtml?: string; from?: { bn: number; cn: number; vn: number }; to?: { bn: number; cn: number; vn: number } }

@@ -2,7 +2,9 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, useSearchParams, Link } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../lib/db'
-import { tokenize, wordDiff, normalizeWord, type DiffOp } from '../lib/text'
+import { tokenize, wordDiff, normalizeWord, verseStartsFrom, type DiffOp } from '../lib/text'
+import { fetchPassage } from '../lib/bible'
+import { refFromVerse } from '../lib/refs'
 import { hintText } from '../lib/hints'
 import { gradeFromAccuracy, newReviewState, penalize, review } from '../lib/srs'
 import { parseReference } from '../lib/refs'
@@ -154,14 +156,18 @@ function Result({ accuracy, ops, onAgain }: { accuracy: number; ops?: DiffOp[]; 
 function ReadMode({ verse }: { verse: Verse }) {
   const started = useRef(Date.now())
   useEffect(() => { return () => { recordAttempt(verse, 'read', 1, 0, started.current) } }, [verse])
+  // Verses saved before verse breaks were recorded: fetch them once and remember.
+  useEffect(() => {
+    if (verse.verseStarts || verse.translation === 'custom') return
+    const ref = refFromVerse(verse)
+    if (!ref) return
+    fetchPassage(ref, verse.translation).then(p => {
+      if (p.verses?.length) db.verses.update(verse.id!, { verseStarts: verseStartsFrom(p.verses) })
+    }).catch(() => { /* offline; try again next time */ })
+  }, [verse.id])
   return (
     <section>
-      <VerseText text={verse.text} reference={`${verse.reference} (${(verse.translationLabel ?? verse.translation.toUpperCase())})`} />
-      {verse.chunks && (
-        <ol className="chunks">
-          {verse.chunks.map((c, i) => <li key={i}><strong>{c.keyword}</strong> — {c.gist}</li>)}
-        </ol>
-      )}
+      <VerseText text={verse.text} reference={`${verse.reference} (${verse.translationLabel ?? verse.translation.toUpperCase()})`} verseStarts={verse.verseStarts} chapter={verse.chapter} />
       <p className="muted">Read it aloud three times, then try <em>First letters</em>.</p>
     </section>
   )

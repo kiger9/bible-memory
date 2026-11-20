@@ -2,7 +2,7 @@
 import { db, getSettings } from './db'
 import { fetchPassage, getTranslation, type FetchedPassage } from './bible'
 import type { ParsedRef } from './refs'
-import { tokenize } from './text'
+import { tokenize, verseStartsFrom } from './text'
 import { newReviewState } from './srs'
 import { scheduleSync } from './sync'
 import type { ThoughtChunk, TranslationId, Verse } from './types'
@@ -50,6 +50,7 @@ export async function addVerse(parsed: ParsedRef, translation: TranslationId, op
     chapterEnd: parsed.chapterEnd !== parsed.chapter ? parsed.chapterEnd : undefined,
     translation, translationLabel: isManual ? label : undefined,
     text: passage.text, words, chunks, createdAt: Date.now(), fetchedAt: Date.now(),
+    verseStarts: passage.verses?.length ? verseStartsFrom(passage.verses) : passage.verseEnd === parsed.verseStart ? [{ n: parsed.verseStart, word: 0 }] : undefined,
   }) as number
   await db.reviews.put(newReviewState(id))
   if (opts.rememberTranslation) await db.settings.put({ ...(await getSettings()), defaultTranslation: translation })

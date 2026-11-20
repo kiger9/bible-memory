@@ -44,6 +44,7 @@ a { color: var(--accent); }
 .error { color: var(--miss); font-size: var(--fs-caption); }
 .verse { margin: var(--sp-4) 0; max-width: var(--measure); }
 .verse-text { font-family: var(--font-serif); font-size: var(--fs-verse); line-height: var(--lh-verse); margin: 0; font-variation-settings: 'opsz' 19; }
+.vnum { font-family: var(--font-sans); font-size: .58em; font-weight: 600; color: var(--accent); margin-right: .25em; vertical-align: super; line-height: 0; letter-spacing: .02em; }
 .verse-ref { margin-top: var(--sp-2); color: var(--ink-3); font-size: var(--fs-caption); letter-spacing: .04em; }
 .attribution { font-size: 11px; color: var(--ink-3); line-height: 1.4; }
 

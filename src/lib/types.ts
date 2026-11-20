@@ -24,6 +24,7 @@ export interface Verse {
   translationLabel?: string   // e.g. "NIV" when translation === 'custom'
   text: string               // plain text, verse numbers stripped
   words: string[]            // tokenized text (display tokens, punctuation kept)
+  verseStarts?: { n: number; word: number }[]  // verse number -> index of its first word
   chunks?: ThoughtChunk[]    // LLM-generated hint structure (optional until fetched)
   createdAt: number
   fetchedAt?: number         // when the text was last fetched from its provider (licensed text is refreshed every 30 days)
