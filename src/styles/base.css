@@ -84,8 +84,8 @@ a { color: var(--accent); }
 .result { text-align: center; padding-top: var(--sp-5); }
 .score { font-family: var(--font-serif); font-size: var(--fs-display); font-weight: 500; letter-spacing: var(--ls-tight); margin: 0 0 var(--sp-4); font-variant-numeric: tabular-nums; }
 .diff { font-family: var(--font-serif); font-size: var(--fs-body); line-height: var(--lh-verse); text-align: left; }
-.w.wrong, .w.extra { color: var(--miss); text-decoration: line-through; }
-.w.missing { color: var(--miss); text-decoration: underline; text-underline-offset: 3px; }
+.w.extra { color: var(--miss); text-decoration: line-through; }            /* typed, not in the verse */
+.w.missing { color: var(--omit); text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1.5px; }  /* in the verse, left out */
 .chunks { font-size: var(--fs-ui); line-height: var(--lh-body); padding-left: 20px; color: var(--ink-2); }
 .transcript { font-family: var(--font-serif); font-size: var(--fs-verse); line-height: var(--lh-verse); min-height: 96px; padding: var(--sp-3) 0; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
 .transcript.live { border-color: var(--accent); }

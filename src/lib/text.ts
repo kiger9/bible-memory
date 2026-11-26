@@ -16,14 +16,25 @@ export function normalizeText(text: string): string[] {
   return tokenize(text).map(normalizeWord).filter(Boolean)
 }
 
+/** True for tokens that contain letters or digits; false for stand-alone punctuation such as an em dash. */
+export function isWordToken(w: string): boolean { return normalizeWord(w) !== '' }
+
+/** Index of the first real word at or after `i` (skips stand-alone punctuation). */
+export function nextWordIndex(words: string[], i: number): number {
+  while (i < words.length && !isWordToken(words[i])) i++
+  return i
+}
+
 export function firstLetters(words: string[]): string {
-  return words.map(w => normalizeWord(w).charAt(0).toUpperCase()).join(' ')
+  return words.filter(isWordToken).map(w => normalizeWord(w).charAt(0).toUpperCase()).join(' ')
 }
 
 export type DiffOp = { type: 'match' | 'wrong' | 'missing' | 'extra'; expected?: string; actual?: string }
 
 /** Word-level LCS diff: expected vs. actual. Returns ops in expected order plus accuracy. */
-export function wordDiff(expected: string[], actual: string[]): { ops: DiffOp[]; accuracy: number } {
+export function wordDiff(expectedRaw: string[], actualRaw: string[]): { ops: DiffOp[]; accuracy: number } {
+  // Stand-alone punctuation (an em dash, a lone quotation mark) is never required or penalised.
+  const expected = expectedRaw.filter(isWordToken), actual = actualRaw.filter(isWordToken)
   const e = expected.map(normalizeWord), a = actual.map(normalizeWord)
   const n = e.length, m = a.length
   const dp: number[][] = Array.from({ length: n + 1 }, () => new Array(m + 1).fill(0))

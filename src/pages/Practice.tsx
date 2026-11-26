@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, useSearchParams, Link } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../lib/db'
-import { tokenize, wordDiff, normalizeWord, verseStartsFrom, type DiffOp } from '../lib/text'
+import { tokenize, wordDiff, normalizeWord, verseStartsFrom, isWordToken, nextWordIndex, type DiffOp } from '../lib/text'
 import { fetchPassage } from '../lib/bible'
 import { refFromVerse } from '../lib/refs'
 import { hintText } from '../lib/hints'
@@ -140,9 +140,10 @@ function Result({ accuracy, ops, onAgain }: { accuracy: number; ops?: DiffOp[]; 
       <p className="score">{Math.round(accuracy * 100)}%</p>
       {ops && (
         <p className="diff">
-          {ops.map((o, i) => (
-            <span key={i} className={'w ' + o.type}>{o.type === 'extra' ? o.actual : o.expected}{' '}</span>
-          ))}
+          {ops.map((o, i) => o.type === 'wrong'
+            ? <span key={i}><span className="w extra">{o.actual}</span> <span className="w missing">{o.expected}</span> </span>
+            : <span key={i} className={'w ' + o.type}>{o.type === 'extra' ? o.actual : o.expected}{' '}</span>
+          )}
         </p>
       )}
       <button className="button primary" onClick={onAgain}>Again</button>
@@ -175,30 +176,31 @@ function ReadMode({ verse }: { verse: Verse }) {
 
 /** Progressive recall: type each word; only the first letter must be right. Wrong first letter reveals the word. */
 function FirstLetterMode({ verse, penalty }: { verse: Verse; penalty?: boolean }) {
-  const [at, setAt] = useState(0)
+  const wordCount = useMemo(() => verse.words.filter(isWordToken).length, [verse.words])
+  const [at, setAt] = useState(() => nextWordIndex(verse.words, 0))
   const [misses, setMisses] = useState(0)
   const [hints, setHints] = useState(0)
   const [flash, setFlash] = useState<'ok' | 'bad' | null>(null)
   const started = useRef(Date.now())
   const inputRef = useRef<HTMLInputElement>(null)
   const done = at >= verse.words.length
-  useEffect(() => { if (done) recordAttempt(verse, 'firstletter', Math.max(0, 1 - misses / verse.words.length), hints, started.current, penalty) }, [done])
+  useEffect(() => { if (done) recordAttempt(verse, 'firstletter', Math.max(0, 1 - misses / wordCount), hints, started.current, penalty) }, [done])
 
   function onKey(e: React.ChangeEvent<HTMLInputElement>) {
     const ch = normalizeWord(e.target.value).slice(-1)
     e.target.value = ''
     if (!ch || done) return
     const want = normalizeWord(verse.words[at]).charAt(0)
-    if (ch === want) { setFlash('ok'); setAt(a => a + 1) } else { setFlash('bad'); setMisses(m => m + 1) }
+    if (ch === want) { setFlash('ok'); setAt(a => nextWordIndex(verse.words, a + 1)) } else { setFlash('bad'); setMisses(m => m + 1) }
     setTimeout(() => setFlash(null), 150)
   }
 
-  if (done) return <Result accuracy={Math.max(0, 1 - misses / verse.words.length)} onAgain={() => { setAt(0); setMisses(0); setHints(0); started.current = Date.now() }} />
+  if (done) return <Result accuracy={Math.max(0, 1 - misses / wordCount)} onAgain={() => { setAt(nextWordIndex(verse.words, 0)); setMisses(0); setHints(0); started.current = Date.now() }} />
   return (
     <section onClick={() => inputRef.current?.focus()}>
       <p className="verse-text progressive">
         {verse.words.map((w, i) => (
-          <span key={i} className={'w ' + (i < at ? 'done' : i === at ? 'current ' + (flash ?? '') : 'todo')}>{i < at ? w : i === at && flash === 'bad' ? w : '•'}{' '}</span>
+          <span key={i} className={'w ' + (i < at || !isWordToken(w) ? 'done' : i === at ? 'current ' + (flash ?? '') : 'todo')}>{i < at || !isWordToken(w) ? w : i === at && flash === 'bad' ? w : '•'}{' '}</span>
         ))}
       </p>
       <input ref={inputRef} className="ghost-input" autoFocus autoCapitalize="none" autoCorrect="off" onChange={onKey} aria-label="Type the first letter of the next word" />

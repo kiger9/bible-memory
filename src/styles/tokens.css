@@ -31,6 +31,7 @@
   /* --- Color: semantic (used sparingly, never as decoration) ------------ */
   --miss:         #8A2E2B;   /* oxblood: a wrong word, a destructive action */
   --note:         #8A5A12;   /* amber: a gentle warning, a due-today marker */
+  --omit:         #C2550F;   /* dark orange: a word that was left out              */
 
   /* --- Color: focus ----------------------------------------------------- */
   --focus-ring:   var(--accent);
@@ -107,6 +108,7 @@
     --on-accent:    #15241B;
     --miss:         #E4998F;
     --note:         #E0B36A;
+    --omit:         #F0A464;
     --shadow-sheet: 0 -1px 0 var(--rule), 0 -12px 32px rgba(0, 0, 0, 0.35);
     --shadow-float: 0 1px 2px rgba(0, 0, 0, 0.35), 0 6px 20px rgba(0, 0, 0, 0.30);
   }
@@ -126,6 +128,7 @@
   --on-accent:    #15241B;
   --miss:         #E4998F;
   --note:         #E0B36A;
+  --omit:         #F0A464;
   --shadow-sheet: 0 -1px 0 var(--rule), 0 -12px 32px rgba(0, 0, 0, 0.35);
   --shadow-float: 0 1px 2px rgba(0, 0, 0, 0.35), 0 6px 20px rgba(0, 0, 0, 0.30);
 }
